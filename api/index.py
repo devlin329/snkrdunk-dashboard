@@ -146,22 +146,37 @@ async def scrape_api(req: ScrapeRequest):
         for i, h in enumerate(all_histories[:3]):
             print(f"  [{i}] FULL DATA: {h}")
 
-    # 🔧 價格標準化：移除地區稅費差異 (Vercel 美國IP會多 $10)
-    # 檢測並修正價格，確保全球一致性
-    PRICE_ADJUSTMENT = -10  # 美國 IP 價格比台灣高 $10
+    # 🔧 價格標準化：移除地區稅費差異 (美國 IP 價格比台灣高 $10)
+    # Vercel 預設會塞入 VERCEL 環境變數，如果在 Vercel 跑就固定減 10 鎂
+    PRICE_ADJUSTMENT = -10 if os.environ.get("VERCEL") else -10  # 根據使用者要求，這裡全面扣除 10 鎂
 
-    # 檢測是否為美國 IP (透過價格範圍判斷)
-    if all_histories and len(all_histories) >= 3:
-        avg_price = sum(h.get("price", 0) for h in all_histories[:10]) / min(10, len(all_histories))
-        # 如果平均價格 > 70，推測為美國 IP (含稅)
-        if avg_price > 70:
-            print(f"[PRICE_FIX] 檢測到高價區 (avg=${avg_price:.0f})，套用價格修正 {PRICE_ADJUSTMENT}")
+    if PRICE_ADJUSTMENT != 0:
+        print(f"[PRICE_FIX] 套用全局價格修正：{PRICE_ADJUSTMENT}")
+        
+        # 1. 修正歷史成交紀錄
+        if all_histories:
             for h in all_histories:
                 if "price" in h and h["price"] > 0:
                     h["price"] += PRICE_ADJUSTMENT
-                    # 更新 priceFormat
                     h["priceFormat"] = f"US ${h['price']}"
-            print(f"[PRICE_FIX] 已修正 {len(all_histories)} 筆交易價格")
+        
+        # 2. 修正各狀態最低價 (PSA 10 等)
+        if condition_prices and "conditionPrices" in condition_prices:
+            for c in condition_prices["conditionPrices"]:
+                if "minPriceAmount" in c and c["minPriceAmount"] > 0:
+                    c["minPriceAmount"] += PRICE_ADJUSTMENT
+                    c["minPriceFormat"] = f"US ${c['minPriceAmount']}"
+                    
+        # 3. 修正 Info 裡的 Used 最低價與 DataLayer 價格
+        used_amount = int(info.get("used_min_price_amount", 0))
+        if used_amount > 0:
+            info["used_min_price_amount"] = used_amount + PRICE_ADJUSTMENT
+            info["used_min_price"] = f"US ${info['used_min_price_amount']}"
+            
+        dl_price = int(info.get("datalayer_price", 0))
+        if dl_price > 0:
+            info["datalayer_price"] = dl_price + PRICE_ADJUSTMENT
+
 
     response_data = {
         "info": info,
