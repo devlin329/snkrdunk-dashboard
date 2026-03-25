@@ -107,6 +107,8 @@ def _extract_card_id(url: str) -> str:
 
 @app.post("/api/scrape")
 async def scrape_api(req: ScrapeRequest):
+    from fastapi.responses import JSONResponse
+
     if not req.url.startswith("http"):
         raise HTTPException(status_code=400, detail="Invalid URL")
     card_id = _extract_card_id(req.url)
@@ -128,17 +130,27 @@ async def scrape_api(req: ScrapeRequest):
         if len(histories) < 100:
             break
 
-    # 調試：記錄前3筆交易的原始數據
+    # 調試：記錄前3筆交易的完整原始數據
     if all_histories:
         print(f"[DEBUG] First 3 histories for card {card_id}:")
         for i, h in enumerate(all_histories[:3]):
-            print(f"  [{i}] price={h.get('price')}, priceFormat={h.get('priceFormat')}, condition={h.get('condition')}")
+            print(f"  [{i}] FULL DATA: {h}")
 
-    return {
+    response_data = {
         "info": info,
         "condition_prices": condition_prices.get("conditionPrices", []) if condition_prices else [],
         "trading_histories": all_histories,
     }
+
+    # Force no-cache to prevent stale data in Vercel edge network
+    return JSONResponse(
+        content=response_data,
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+    )
 
 
 @app.get("/api/conditions")
