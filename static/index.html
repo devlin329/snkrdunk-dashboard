@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snkrdunk Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
+        :root {
+            --bg: #faf6f1; --bg-warm: #f5efe7; --card: rgba(255,255,255,0.88);
+            --primary: #c0784c; --primary-light: #d4956a; --accent: #8b6f4e;
+            --rust: #b85c3a; --sage: #7a9177; --sage-light: #a3bfa0;
+            --gold: #c9a84c; --plum: #8b5e7b;
+            --text: #3d3229; --text-sec: #7a6b5d; --muted: #b0a396;
+            --border: rgba(139,111,78,0.12); --shadow: rgba(139,111,78,0.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'DM Sans', sans-serif; }
+        body {
+            background: var(--bg);
+            background-image: radial-gradient(ellipse at 20% 0%, rgba(192,120,76,0.05), transparent 50%),
+                              radial-gradient(ellipse at 80% 100%, rgba(122,145,119,0.05), transparent 50%);
+            color: var(--text); min-height: 100vh; display: flex;
+        }
+
+        /* ======= LEFT SIDEBAR (Watchlist) ======= */
+        .sidebar {
+            width: 240px; min-width: 240px; background: var(--card); border-right: 1px solid var(--border);
+            padding: 20px 14px; display: flex; flex-direction: column; height: 100vh;
+            position: sticky; top: 0; overflow-y: auto;
+        }
+        .sidebar h2 { font-size: .85rem; font-weight: 700; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .wl-empty { color: var(--muted); font-size: .78rem; text-align: center; padding: 20px 0; line-height: 1.5; }
+        .wl-item {
+            display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 10px;
+            cursor: pointer; transition: .2s; margin-bottom: 4px; border: 1px solid transparent;
+        }
+        .wl-item:hover { background: var(--bg-warm); border-color: var(--border); }
+        .wl-item.active { background: rgba(192,120,76,.08); border-color: var(--primary-light); }
+        .wl-item img { width: 36px; height: 48px; object-fit: contain; border-radius: 6px; background: var(--bg); flex-shrink: 0; }
+        .wl-item .wl-info { flex: 1; min-width: 0; }
+        .wl-item .wl-name { font-size: .72rem; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .wl-item .wl-price { font-size: .68rem; color: var(--sage); font-weight: 600; margin-top: 2px; }
+        .wl-remove { background: none; border: none; color: var(--muted); font-size: .8rem; cursor: pointer; padding: 2px; border-radius: 4px; opacity: 0; transition: .2s; flex-shrink: 0; }
+        .wl-item:hover .wl-remove { opacity: 1; }
+        .wl-remove:hover { color: var(--rust); }
+
+        /* ======= MAIN CONTENT ======= */
+        .main { flex: 1; padding: 28px 20px; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+        .header { text-align: center; margin-bottom: 22px; }
+        .header h1 { font-size: 1.6rem; font-weight: 700; color: var(--primary); }
+        .header p { color: var(--muted); margin-top: 3px; font-size: .82rem; }
+        .container { width: 100%; max-width: 880px; }
+
+        .input-group { display: flex; gap: 8px; margin-bottom: 18px; background: var(--card); padding: 10px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 2px 10px var(--shadow); }
+        input[type="text"] { flex:1; padding: 11px 14px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: .88rem; outline: none; transition: .3s; }
+        input[type="text"]:focus { border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(192,120,76,0.08); }
+        .btn { padding: 11px 18px; border-radius: 9px; border: none; font-weight: 600; font-size: .85rem; cursor: pointer; transition: .2s; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-light); transform: translateY(-1px); }
+        .btn-add { background: rgba(122,145,119,.12); color: var(--sage); border: 1px solid rgba(122,145,119,.2); }
+        .btn-add:hover { background: rgba(122,145,119,.2); }
+        .btn-tg { background: var(--sage); color: #fff; width: 100%; margin-top: 14px; padding: 13px; display: none; border-radius: 10px; }
+        .btn-tg:hover { background: var(--sage-light); }
+
+        .loader { display: none; justify-content: center; align-items: center; padding: 40px; gap: 12px; }
+        .spinner { width: 28px; height: 28px; border: 3px solid rgba(192,120,76,.15); border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; }
+
+        .hero { display: flex; gap: 14px; align-items: center; background: var(--card); border-radius: 12px; padding: 14px; border: 1px solid var(--border); margin-bottom: 12px; box-shadow: 0 1px 8px var(--shadow); }
+        .hero img { width: 80px; height: 110px; object-fit: contain; border-radius: 8px; background: var(--bg-warm); padding: 5px; }
+        .hero .info h2 { font-size: .95rem; line-height: 1.3; margin-bottom: 3px; font-weight: 600; }
+        .hero .info p { color: var(--text-sec); font-size: .78rem; margin-bottom: 1px; }
+        .hero .badge { display: inline-block; background: rgba(192,120,76,.08); color: var(--primary); padding: 2px 8px; border-radius: 10px; font-size: .68rem; font-weight: 600; margin-top: 3px; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 7px; margin-bottom: 12px; }
+        .card { background: var(--card); border-radius: 10px; padding: 12px; border: 1px solid var(--border); transition: .2s; box-shadow: 0 1px 4px var(--shadow); }
+        .card:hover { transform: translateY(-1px); box-shadow: 0 3px 12px var(--shadow); }
+        .card.highlight { border-color: var(--primary-light); background: rgba(192,120,76,.03); }
+        .card.highlight .card-val { color: var(--primary); }
+        .card-label { color: var(--muted); font-size: .65rem; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; font-weight: 500; }
+        .card-val { font-size: 1.05rem; font-weight: 700; }
+
+        .section-title { font-size: .85rem; font-weight: 600; margin: 14px 0 7px; color: var(--accent); display: flex; align-items: center; gap: 5px; }
+
+        .tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; padding: 8px; background: var(--card); border-radius: 10px; border: 1px solid var(--border); }
+        .tab { padding: 5px 11px; border-radius: 7px; border: 1px solid var(--border); background: transparent; color: var(--text-sec); font-size: .74rem; font-weight: 500; cursor: pointer; transition: .2s; }
+        .tab:hover { border-color: var(--primary-light); color: var(--text); }
+        .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        .tbl-wrap { background: var(--card); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 12px; }
+        .tbl-scroll { max-height: 280px; overflow-y: auto; }
+        .tbl-wrap table { width: 100%; border-collapse: collapse; }
+        .tbl-wrap th { text-align: left; padding: 8px 12px; color: var(--muted); font-size: .7rem; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(255,255,255,.95); font-weight: 600; }
+        .tbl-wrap td { padding: 7px 12px; font-size: .8rem; border-bottom: 1px solid rgba(139,111,78,.05); }
+        .tbl-wrap tr:hover { background: rgba(192,120,76,.02); }
+        .tbl-wrap .price { font-weight: 700; color: var(--sage); }
+        .cond-badge { background: rgba(192,120,76,.07); color: var(--primary); padding: 2px 7px; border-radius: 5px; font-size: .7rem; font-weight: 600; }
+        .tbl-scroll::-webkit-scrollbar { width: 4px; } .tbl-scroll::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 2px; }
+        .no-data { text-align: center; padding: 20px; color: var(--muted); font-size: .82rem; }
+
+        .chart-box { background: var(--card); border-radius: 12px; padding: 16px; border: 1px solid var(--border); margin-bottom: 12px; box-shadow: 0 1px 8px var(--shadow); }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
+        .chart-header h3 { font-size: .84rem; font-weight: 600; color: var(--accent); }
+        .time-tabs { display: flex; gap: 2px; background: var(--bg-warm); padding: 2px; border-radius: 7px; }
+        .time-tab { padding: 4px 13px; border-radius: 6px; border: none; background: transparent; color: var(--text-sec); font-size: .74rem; font-weight: 600; cursor: pointer; transition: .2s; }
+        .time-tab.active { background: #fff; color: var(--primary); box-shadow: 0 1px 3px var(--shadow); }
+        .chart-stats { display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid var(--border); }
+        .chart-stat { font-size: .73rem; color: var(--text-sec); }
+        .chart-stat span { font-weight: 700; color: var(--text); }
+        .chart-stat.up span { color: var(--sage); }
+        .chart-stat.down span { color: var(--rust); }
+        .outlier-note { font-size: .7rem; color: var(--muted); margin-top: 6px; font-style: italic; }
+        .vol-label { font-size: .65rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 8px; padding-left: 4px; }
+
+        .dashboard { display: none; } .dashboard.visible { display: block; }
+        #toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: var(--sage); color: #fff; padding: 11px 22px; border-radius: 22px; font-weight: 600; font-size: .82rem; box-shadow: 0 4px 14px rgba(122,145,119,.3); transition: bottom .4s cubic-bezier(.175,.885,.32,1.275); z-index: 1000; }
+        #toast.show { bottom: 28px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; min-width: 100%; height: auto; position: relative; flex-direction: row; flex-wrap: wrap; padding: 12px; border-right: none; border-bottom: 1px solid var(--border); }
+            .sidebar h2 { width: 100%; }
+            .wl-item { flex: 0 0 auto; margin-bottom: 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ======= WATCHLIST SIDEBAR ======= -->
+    <aside class="sidebar" id="sidebar">
+        <h2>📌 關注清單</h2>
+        <div id="watchlist"></div>
+    </aside>
+
+    <!-- ======= MAIN ======= -->
+    <div class="main">
+        <div class="header">
+            <h1>🍂 Snkrdunk Intelligence</h1>
+            <p>Trading Card Market Analytics</p>
+        </div>
+        <div class="container">
+            <div class="input-group">
+                <input type="text" id="urlInput" placeholder="Paste Snkrdunk card URL..." value="https://snkrdunk.com/en/trading-cards/706813">
+                <button class="btn btn-primary" id="scrapeBtn" onclick="fetchAll()">Analyze</button>
+                <button class="btn btn-add" id="addBtn" onclick="addToWatchlist()" style="display:none" title="加入關注清單">+ 關注</button>
+            </div>
+            <div class="loader" id="loader"><div class="spinner"></div><span style="color:var(--muted)">Fetching market data...</span></div>
+
+            <div class="dashboard" id="dashboard">
+                <div class="hero">
+                    <img id="heroImg" src="" alt="Card" />
+                    <div class="info">
+                        <h2 id="heroTitle">-</h2>
+                        <p id="heroSub"></p>
+                        <p id="heroPn"></p>
+                        <span class="badge" id="heroRelease"></span>
+                    </div>
+                </div>
+
+                <div class="section-title">💎 Min Prices by Condition</div>
+                <div class="grid" id="condGrid"></div>
+
+                <div class="section-title">📋 Trading History</div>
+                <div class="tabs" id="condTabs"></div>
+                <div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>Date</th><th>Condition</th><th>Price</th></tr></thead><tbody id="thBody"></tbody></table></div></div>
+
+                <div class="section-title">📈 Price Chart</div>
+                <div class="chart-box">
+                    <div class="chart-header">
+                        <h3 id="chartTitle">Price Trend</h3>
+                        <div class="time-tabs" id="timeTabs">
+                            <button class="time-tab" onclick="setTimeRange(7, this)">1W</button>
+                            <button class="time-tab" onclick="setTimeRange(30, this)">1M</button>
+                            <button class="time-tab active" onclick="setTimeRange(90, this)">3M</button>
+                            <button class="time-tab" onclick="setTimeRange(0, this)">All</button>
+                        </div>
+                    </div>
+                    <canvas id="priceChart" height="180"></canvas>
+                    <div class="vol-label">Vol</div>
+                    <canvas id="volChart" height="50"></canvas>
+                    <div class="chart-stats" id="chartStats"></div>
+                    <div class="outlier-note" id="outlierNote"></div>
+                </div>
+            </div>
+            <button class="btn btn-tg" id="tgBtn" onclick="sendToTelegram()">🍃 Push to Telegram</button>
+        </div>
+    </div>
+    <div id="toast">✅ Done!</div>
+
+<script>
+let rawData = null, allHistories = [], conditions = [];
+let activeCondition = 'All', activeDays = 90, currentUrl = '';
+let chart = null, volChart = null;
+
+// ======= WATCHLIST (localStorage) =======
+const WL_KEY = 'snkrdunk_watchlist';
+
+function loadWatchlist() {
+    try { return JSON.parse(localStorage.getItem(WL_KEY)) || []; } catch { return []; }
+}
+function saveWatchlist(list) { localStorage.setItem(WL_KEY, JSON.stringify(list)); }
+
+function renderWatchlist() {
+    const list = loadWatchlist();
+    const el = document.getElementById('watchlist');
+
+    // 清除所有子元素（重建整個列表）
+    el.innerHTML = '';
+
+    if (list.length === 0) {
+        el.innerHTML = '<div class="wl-empty">尚無關注卡片<br>分析後點「+ 關注」</div>';
+        return;
+    }
+    for (const item of list) {
+        const div = document.createElement('div');
+        div.className = `wl-item${currentUrl.includes(item.cardId) ? ' active' : ''}`;
+        div.innerHTML = `
+            <img src="${item.thumbnail || ''}" alt="" onerror="this.style.display='none'" />
+            <div class="wl-info">
+                <div class="wl-name" title="${item.title}">${item.title}</div>
+                <div class="wl-price">${item.psa10Price || item.usedMinPrice || '-'}</div>
+            </div>
+            <button class="wl-remove" onclick="event.stopPropagation(); removeFromWatchlist('${item.cardId}')" title="移除">✕</button>
+        `;
+        div.addEventListener('click', () => {
+            document.getElementById('urlInput').value = item.url;
+            fetchAll();
+        });
+        el.appendChild(div);
+    }
+}
+
+function addToWatchlist() {
+    if (!rawData) return;
+    const list = loadWatchlist();
+    const info = rawData.info;
+    const cardId = extractCardId(currentUrl);
+    if (list.find(x => x.cardId === cardId)) {
+        showToast('已在關注清單中');
+        return;
+    }
+    const psa10 = (rawData.condition_prices || []).find(c => c.conditionName === 'PSA 10');
+    list.push({
+        cardId,
+        url: currentUrl,
+        title: info.title || 'Unknown',
+        thumbnail: info.thumbnail_url || '',
+        usedMinPrice: info.used_min_price || '-',
+        psa10Price: psa10 ? psa10.minPriceFormat : '',
+        addedAt: new Date().toISOString()
+    });
+    saveWatchlist(list);
+    renderWatchlist();
+    showToast('已加入關注清單 📌');
+}
+
+function removeFromWatchlist(cardId) {
+    let list = loadWatchlist();
+    list = list.filter(x => x.cardId !== cardId);
+    saveWatchlist(list);
+    renderWatchlist();
+}
+
+function extractCardId(url) {
+    const m = url.match(/\/trading-cards\/(\d+)/);
+    return m ? m[1] : '';
+}
+
+// Init
+(async () => {
+    renderWatchlist();
+    try { const r = await fetch('/api/conditions'); const d = await r.json(); conditions = d.conditions || []; } catch(e) {}
+})();
+
+// ======= FETCH & RENDER =======
+async function fetchAll() {
+    const url = document.getElementById('urlInput').value.trim();
+    if (!url) return alert("請輸入網址");
+    currentUrl = url;
+    document.getElementById('scrapeBtn').disabled = true;
+    document.getElementById('addBtn').style.display = 'none';
+    document.getElementById('dashboard').classList.remove('visible');
+    document.getElementById('tgBtn').style.display = 'none';
+    document.getElementById('loader').style.display = 'flex';
+    try {
+        const resp = await fetch('/api/scrape', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ url }) });
+        if (!resp.ok) throw new Error("Failed");
+        rawData = await resp.json();
+        allHistories = rawData.trading_histories || [];
+        activeCondition = 'All'; activeDays = 90;
+        render();
+        renderWatchlist(); // update active state
+    } catch(e) { alert("Error: " + e.message); document.getElementById('loader').style.display = 'none'; }
+    finally { document.getElementById('scrapeBtn').disabled = false; }
+}
+
+function render() {
+    const info = rawData.info || {};
+
+    const heroTitle = document.getElementById('heroTitle');
+    const heroSub = document.getElementById('heroSub');
+    const heroPn = document.getElementById('heroPn');
+    const heroRelease = document.getElementById('heroRelease');
+    const heroImg = document.getElementById('heroImg');
+
+    if (heroTitle) heroTitle.innerText = info.title || 'Unknown Card';
+    if (heroSub) heroSub.innerText = info.subtitle || '';
+    if (heroPn) heroPn.innerText = info.product_number ? `#${info.product_number}` : '';
+    if (heroRelease) heroRelease.innerText = info.released_at ? `Released: ${info.released_at.split('T')[0]}` : '';
+    if (heroImg) {
+        if (info.thumbnail_url) { heroImg.src = info.thumbnail_url; heroImg.style.display = 'block'; }
+        else { heroImg.style.display = 'none'; }
+    }
+
+    const grid = document.getElementById('condGrid');
+    if (grid) {
+        grid.innerHTML = '';
+        for (const cp of (rawData.condition_prices || [])) {
+            const hl = cp.conditionName === 'PSA 10' ? 'highlight' : '';
+            grid.innerHTML += `<div class="card ${hl}"><div class="card-label">${cp.conditionName}</div><div class="card-val">${cp.minPriceFormat}</div></div>`;
+        }
+    }
+
+    const tabs = document.getElementById('condTabs');
+    if (tabs) {
+        const uniq = [...new Set(allHistories.map(h => h.condition))];
+        tabs.innerHTML = `<button class="tab ${activeCondition==='All'?'active':''}" onclick="filterCond('All')">All</button>`;
+        for (const c of uniq) tabs.innerHTML += `<button class="tab ${activeCondition===c?'active':''}" onclick="filterCond('${c}')">${c}</button>`;
+    }
+
+    renderTable(); renderChart();
+    const loader = document.getElementById('loader');
+    const dashboard = document.getElementById('dashboard');
+    const tgBtn = document.getElementById('tgBtn');
+    const addBtn = document.getElementById('addBtn');
+    if (loader) loader.style.display = 'none';
+    if (dashboard) dashboard.classList.add('visible');
+    if (tgBtn) tgBtn.style.display = 'block';
+    if (addBtn) addBtn.style.display = 'inline-flex';
+}
+
+function filterCond(c) {
+    activeCondition = c;
+    document.querySelectorAll('#condTabs .tab').forEach(t => t.classList.toggle('active', t.textContent === c));
+    renderTable(); renderChart();
+}
+function setTimeRange(days, el) {
+    activeDays = days;
+    document.querySelectorAll('#timeTabs .time-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderChart();
+}
+function getFiltered() {
+    let d = allHistories;
+    if (activeCondition !== 'All') d = d.filter(h => h.condition === activeCondition);
+    return d;
+}
+function getTimeFiltered(data) {
+    if (activeDays === 0) return data;
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - activeDays);
+    return data.filter(h => new Date(h.tradedAt) >= cutoff);
+}
+
+/**
+ * 🧹 局部鄰近清洗 — 偵測多張捆綁交易
+ * 比較每筆價格與前後 ±N 筆的中位數
+ * 若 > 2.2x 局部中位數 → 推斷為多張，除以最近整數倍
+ * 例：鄰近都 $60，突然 $180 → 180/60=3 → 推算 $60
+ * 例：鄰近都 $220，$450 → 450/220=2.04 < 2.2 → 保留 $450
+ */
+function cleanForTrend(prices) {
+    if (prices.length < 6) return [...prices];
+    const radius = 10; // 看前後各 10 筆
+    const threshold = 2.2;
+
+    return prices.map((p, i) => {
+        // 收集鄰近價格（排除自身）
+        const neighbors = [];
+        for (let j = Math.max(0, i - radius); j < Math.min(prices.length, i + radius + 1); j++) {
+            if (j !== i) neighbors.push(prices[j]);
+        }
+        if (neighbors.length < 3) return p;
+
+        // 鄰近中位數
+        neighbors.sort((a, b) => a - b);
+        const localMedian = neighbors[Math.floor(neighbors.length / 2)];
+        if (localMedian <= 0) return p;
+
+        const ratio = p / localMedian;
+        if (ratio >= threshold) {
+            const mult = Math.round(ratio);
+            if (mult >= 2) return Math.round(p / mult);
+        }
+        return p;
+    });
+}
+
+/**
+ * 📈 計算移動中位數趨勢線
+ */
+function calcMA(prices, windowSize) {
+    const ma = [];
+    for (let i = 0; i < prices.length; i++) {
+        const start = Math.max(0, i - Math.floor(windowSize / 2));
+        const end = Math.min(prices.length, i + Math.ceil(windowSize / 2));
+        const win = prices.slice(start, end);
+        const sorted = [...win].sort((a, b) => a - b);
+        ma.push(sorted[Math.floor(sorted.length / 2)]);
+    }
+    return ma;
+}
+
+function renderTable() {
+    const filtered = getFiltered();
+    const tbody = document.getElementById('thBody');
+    if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="3" class="no-data">No data</td></tr>'; return; }
+    tbody.innerHTML = '';
+    for (const h of filtered.slice(0, 100)) {
+        const d = new Date(h.tradedAt);
+        const ds = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        tbody.innerHTML += `<tr><td>${ds}</td><td><span class="cond-badge">${h.condition}</span></td><td class="price">${h.priceFormat}</td></tr>`;
+    }
+}
+
+function renderChart() {
+    if (chart) chart.destroy();
+    if (volChart) volChart.destroy();
+    const filtered = getTimeFiltered(getFiltered());
+    const sorted = [...filtered].reverse();
+    const statsEl = document.getElementById('chartStats');
+    const noteEl = document.getElementById('outlierNote');
+    if (!sorted.length) { if (statsEl) statsEl.innerHTML = '<div class="chart-stat">No data</div>'; if (noteEl) noteEl.textContent = ''; return; }
+
+    const rawPrices = sorted.map(h => h.price);
+
+    // 按日期聚合：label + MA趨勢用
+    const dateLabels = sorted.map(h => { const d = new Date(h.tradedAt); return `${d.getMonth()+1}/${d.getDate()}`; });
+
+    // 先清洗多張捆綁 → 再算 MA 趨勢線
+    const cleanedPrices = cleanForTrend(rawPrices);
+    const winSize = Math.max(3, Math.min(15, Math.floor(rawPrices.length / 8)));
+    const maPrices = calcMA(cleanedPrices, winSize);
+
+    const high = Math.max(...maPrices), low = Math.min(...maPrices);
+    const latest = maPrices[maPrices.length - 1], first = maPrices[0];
+    const change = first > 0 ? ((latest - first) / first * 100).toFixed(1) : 0;
+    const isUp = change >= 0;
+    const rawHigh = Math.max(...rawPrices), rawLow = Math.min(...rawPrices);
+
+    if (statsEl) statsEl.innerHTML = `
+        <div class="chart-stat">Trend High: <span>$${high.toLocaleString()}</span></div>
+        <div class="chart-stat">Trend Low: <span>$${low.toLocaleString()}</span></div>
+        <div class="chart-stat">Latest: <span>$${latest.toLocaleString()}</span></div>
+        <div class="chart-stat ${isUp?'up':'down'}">Change: <span>${isUp?'+':''}${change}%</span></div>
+        <div class="chart-stat">Txns: <span>${sorted.length}</span></div>`;
+    if (noteEl) noteEl.textContent = `原始成交: $${rawLow.toLocaleString()} ~ $${rawHigh.toLocaleString()}`;
+
+    const condLabel = activeCondition === 'All' ? 'All' : activeCondition;
+    const titleEl = document.getElementById('chartTitle');
+    if (titleEl) titleEl.innerText = `Price Trend — ${condLabel}`;
+
+    // ========= 價格趨勢圖（只有 MA 線）=========
+    const ctx = document.getElementById('priceChart');
+    if (!ctx) return;
+    const ctx2d = ctx.getContext('2d');
+    const grad = ctx2d.createLinearGradient(0, 0, 0, 260);
+    if (isUp) { grad.addColorStop(0, 'rgba(122,145,119,0.25)'); grad.addColorStop(0.5, 'rgba(122,145,119,0.05)'); grad.addColorStop(1, 'rgba(122,145,119,0)'); }
+    else { grad.addColorStop(0, 'rgba(184,92,58,0.20)'); grad.addColorStop(0.5, 'rgba(184,92,58,0.05)'); grad.addColorStop(1, 'rgba(184,92,58,0)'); }
+    const lineColor = isUp ? '#7a9177' : '#b85c3a';
+
+    chart = new Chart(ctx2d, {
+        type: 'line',
+        data: { labels: dateLabels, datasets: [{
+            label: 'Price Trend',
+            data: maPrices,
+            borderColor: lineColor,
+            backgroundColor: grad,
+            borderWidth: 2.5,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: lineColor,
+            pointHoverBorderWidth: 2,
+            fill: true,
+            tension: 0.4,
+        }]},
+        options: {
+            responsive: true, interaction: { intersect: false, mode: 'index' },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(61,50,41,0.92)', titleColor: '#faf6f1', bodyColor: '#faf6f1',
+                    borderColor: 'rgba(192,120,76,0.15)', borderWidth: 1, padding: 10, cornerRadius: 8,
+                    displayColors: false, titleFont: { size: 11 }, bodyFont: { size: 13, weight: 700 },
+                    callbacks: {
+                        title: (items) => { const h = sorted[items[0].dataIndex]; const d = new Date(h.tradedAt); return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; },
+                        label: (item) => `Trend: $${item.raw.toLocaleString()}`,
+                        afterLabel: (item) => `成交價: $${rawPrices[item.dataIndex].toLocaleString()}`
+                    }
+                },
+                annotation: { annotations: {
+                    highLine: { type: 'line', yMin: high, yMax: high, borderColor: 'rgba(122,145,119,0.3)', borderWidth: 1, borderDash: [4,3],
+                        label: { display: true, content: `$${high.toLocaleString()}`, position: 'start', backgroundColor: 'rgba(122,145,119,0.08)', color: '#7a9177', font: { size: 9, weight: 600 }, padding: {top:2,bottom:2,left:5,right:5} } },
+                    lowLine: { type: 'line', yMin: low, yMax: low, borderColor: 'rgba(184,92,58,0.3)', borderWidth: 1, borderDash: [4,3],
+                        label: { display: true, content: `$${low.toLocaleString()}`, position: 'end', backgroundColor: 'rgba(184,92,58,0.08)', color: '#b85c3a', font: { size: 9, weight: 600 }, padding: {top:2,bottom:2,left:5,right:5} } }
+                }}
+            },
+            scales: {
+                x: { display: false },
+                y: { ticks: { color: '#b0a396', callback: v => '$'+v.toLocaleString(), font: { size: 10 } }, grid: { color: 'rgba(139,111,78,0.05)' }, border: { display: false } }
+            }
+        }
+    });
+
+    // ========= 成交量柱狀圖（按日聚合）=========
+    const volCtx = document.getElementById('volChart');
+    if (!volCtx) return;
+
+    // 按日期聚合成交量
+    const volMap = {};
+    for (const h of sorted) {
+        const d = new Date(h.tradedAt);
+        const key = `${d.getMonth()+1}/${d.getDate()}`;
+        volMap[key] = (volMap[key] || 0) + 1;
+    }
+    // 取得唯一日期標籤（保持順序）
+    const uniqueDates = []; const seen = new Set();
+    for (const l of dateLabels) { if (!seen.has(l)) { seen.add(l); uniqueDates.push(l); } }
+    const volData = uniqueDates.map(d => volMap[d] || 0);
+
+    volChart = new Chart(volCtx.getContext('2d'), {
+        type: 'bar',
+        data: { labels: uniqueDates, datasets: [{
+            data: volData,
+            backgroundColor: isUp ? 'rgba(122,145,119,0.35)' : 'rgba(184,92,58,0.35)',
+            borderRadius: 2,
+            barPercentage: 0.7,
+        }]},
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(61,50,41,0.92)', titleColor: '#faf6f1', bodyColor: '#faf6f1',
+                    cornerRadius: 6, padding: 8, displayColors: false,
+                    callbacks: { label: (item) => `${item.raw} txns` }
+                }
+            },
+            scales: {
+                x: { ticks: { color: '#b0a396', maxRotation: 0, maxTicksLimit: 8, font: { size: 10 } }, grid: { display: false }, border: { color: 'rgba(139,111,78,0.06)' } },
+                y: { display: false }
+            }
+        }
+    });
+}
+
+async function sendToTelegram() {
+    if (!rawData) return;
+    const btn = document.getElementById('tgBtn');
+    btn.innerText = "⏳ Sending..."; btn.disabled = true;
+    const info = rawData.info;
+    const psa10 = rawData.condition_prices.find(c => c.conditionName === 'PSA 10');
+    const latest = allHistories.length > 0 ? allHistories[0] : null;
+    let msg = `📊 <b>${info.title}</b>\n`;
+    if (info.product_number) msg += `#${info.product_number}\n\n`;
+    if (psa10) msg += `💎 PSA 10 最低: ${psa10.minPriceFormat}\n`;
+    msg += `💰 Used最低: ${info.used_min_price}\n📦 Used上架數: ${info.used_listing_count_text}\n`;
+    if (latest) msg += `🕐 最近成交: ${latest.priceFormat} (${latest.condition})\n`;
+    msg += `\n🔗 ${currentUrl}`;
+    try { const r = await fetch('/api/telegram', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({message:msg}) }); if (!r.ok) throw new Error("Error"); showToast('已推播至 Telegram ✅'); }
+    catch(e) { alert("Failed: "+e.message); }
+    finally { btn.innerText = "🍃 Push to Telegram"; btn.disabled = false; }
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg || '✅ Done!';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
