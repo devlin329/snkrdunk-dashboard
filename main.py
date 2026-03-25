@@ -21,6 +21,8 @@ HEADERS = {
     "Accept-Language": "en-US,en;q=1.0",
     "Accept-Encoding": "gzip, deflate, br",
     "Referer": "https://snkrdunk.com/en/",
+    "X-Forwarded-For": "111.255.26.144",  # 模擬台灣 IP，強制使用不含稅價格
+    "CF-IPCountry": "TW",  # Cloudflare 地區標頭
 }
 
 class ScrapeRequest(BaseModel):
@@ -31,10 +33,18 @@ class TelegramRequest(BaseModel):
 
 
 def _api_get(path: str):
-    req = urllib.request.Request(f"{BASE}{path}", headers=HEADERS)
+    # 添加防快取標頭，確保獲取最新數據
+    headers_with_cache = {
+        **HEADERS,
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+    }
+    req = urllib.request.Request(f"{BASE}{path}", headers=headers_with_cache)
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
-            return json.loads(resp.read().decode("utf-8"))
+            data = json.loads(resp.read().decode("utf-8"))
+            print(f"[API] {path} - 狀態碼: {resp.status}, 數據大小: {len(str(data))} bytes")
+            return data
     except Exception as e:
         print(f"[API ERROR] {path}: {e}")
         return None
