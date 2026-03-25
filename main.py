@@ -18,7 +18,9 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Accept": "application/json",
-    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Language": "en-US,en;q=1.0",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Referer": "https://snkrdunk.com/en/",
 }
 
 class ScrapeRequest(BaseModel):
@@ -121,6 +123,12 @@ async def scrape_api(req: ScrapeRequest):
         # 若回傳不足 100 筆代表沒有更多了
         if len(histories) < 100:
             break
+
+    # 調試：記錄前3筆交易的原始數據
+    if all_histories:
+        print(f"[DEBUG] First 3 histories for card {card_id}:")
+        for i, h in enumerate(all_histories[:3]):
+            print(f"  [{i}] price={h.get('price')}, priceFormat={h.get('priceFormat')}, condition={h.get('condition')}")
 
     return {
         "info": info,

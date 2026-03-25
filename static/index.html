@@ -524,6 +524,13 @@ function renderChart() {
 
     const rawPrices = sorted.map(h => h.price);
 
+    // 調試：檢查原始數據
+    console.log('🔍 Raw history data (first 3):');
+    for (let i = 0; i < Math.min(3, sorted.length); i++) {
+        const h = sorted[i];
+        console.log(`   ${h.tradedAt}: price=${h.price}, priceFormat=${h.priceFormat}`);
+    }
+
     // 按日期聚合：label + MA趨勢用
     const dateLabels = sorted.map(h => { const d = new Date(h.tradedAt); return `${d.getMonth()+1}/${d.getDate()}`; });
 
