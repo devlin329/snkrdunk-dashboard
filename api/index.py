@@ -163,9 +163,9 @@ async def scrape_api(req: ScrapeRequest):
         # 2. 修正各狀態最低價 (PSA 10 等)
         if condition_prices and "conditionPrices" in condition_prices:
             for c in condition_prices["conditionPrices"]:
-                if "minPriceAmount" in c and c["minPriceAmount"] > 0:
-                    c["minPriceAmount"] += PRICE_ADJUSTMENT
-                    c["minPriceFormat"] = f"US ${c['minPriceAmount']}"
+                if "minPrice" in c and c["minPrice"] > 0:
+                    c["minPrice"] += PRICE_ADJUSTMENT
+                    c["minPriceFormat"] = f"US ${c['minPrice']}"
                     
         # 3. 修正 Info 裡的 Used 最低價與 DataLayer 價格
         used_amount = int(info.get("used_min_price_amount", 0))
