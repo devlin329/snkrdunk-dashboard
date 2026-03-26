@@ -118,6 +118,24 @@
         #toast.show { bottom: 28px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
+        /* ======= 匯率顯示 ======= */
+        .exchange-rate { background: var(--card); border-radius: 10px; padding: 12px 14px; border: 1px solid var(--border); margin-bottom: 12px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; box-shadow: 0 1px 4px var(--shadow); }
+        .exchange-rate .rate-item { display: flex; align-items: center; gap: 6px; font-size: .78rem; }
+        .exchange-rate .rate-label { color: var(--muted); font-weight: 500; }
+        .exchange-rate .rate-value { font-weight: 700; color: var(--primary); font-size: .85rem; }
+
+        /* ======= 購入成本試算器 ======= */
+        .cost-calculator { background: var(--card); border-radius: 12px; padding: 16px; border: 1px solid var(--border); margin-bottom: 12px; box-shadow: 0 1px 8px var(--shadow); }
+        .calc-input-row { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+        .calc-input-row label { flex: 0 0 100px; font-size: .78rem; font-weight: 600; color: var(--text-sec); }
+        .calc-input-row input { flex: 1; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: .85rem; }
+        .calc-input-row input:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(192,120,76,0.08); }
+        .calc-result { background: rgba(192,120,76,.05); border-radius: 10px; padding: 12px; margin-top: 12px; border: 1px solid rgba(192,120,76,.15); }
+        .calc-result-row { display: flex; justify-content: space-between; font-size: .8rem; margin-bottom: 6px; }
+        .calc-result-row:last-child { margin-bottom: 0; padding-top: 8px; border-top: 1px solid var(--border); font-weight: 700; font-size: .88rem; }
+        .calc-result-label { color: var(--text-sec); }
+        .calc-result-value { color: var(--primary); font-weight: 700; }
+
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .sidebar { width: 100%; min-width: 100%; height: auto; position: relative; flex-direction: row; flex-wrap: wrap; padding: 12px; border-right: none; border-bottom: 1px solid var(--border); }
@@ -161,6 +179,22 @@
                 <div class="section-title">💎 Min Prices by Condition</div>
                 <div class="grid" id="condGrid"></div>
 
+                <!-- 匯率顯示 -->
+                <div class="exchange-rate" id="exchangeRate">
+                    <div class="rate-item">
+                        <span class="rate-label">💵 USD/TWD:</span>
+                        <span class="rate-value" id="usdTwd">載入中...</span>
+                    </div>
+                    <div class="rate-item">
+                        <span class="rate-label">💴 JPY/TWD:</span>
+                        <span class="rate-value" id="jpyTwd">載入中...</span>
+                    </div>
+                    <div class="rate-item">
+                        <span class="rate-label">💰 1 TWD:</span>
+                        <span class="rate-value" id="twdJpy">載入中...</span>
+                    </div>
+                </div>
+
                 <div class="section-title">📋 Trading History</div>
                 <div class="tabs" id="condTabs"></div>
                 <div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>Date</th><th>Condition</th><th>Price</th></tr></thead><tbody id="thBody"></tbody></table></div></div>
@@ -182,6 +216,37 @@
                     <div class="chart-stats" id="chartStats"></div>
                     <div class="outlier-note" id="outlierNote"></div>
                 </div>
+
+                <!-- 購入成本試算器 -->
+                <div class="section-title">🧮 購入成本試算器</div>
+                <div class="cost-calculator">
+                    <div class="calc-input-row">
+                        <label>購入價格 (USD):</label>
+                        <input type="number" id="calcPrice" placeholder="200" value="200" oninput="calculateCost()">
+                    </div>
+                    <div class="calc-result" id="calcResult">
+                        <div class="calc-result-row">
+                            <span class="calc-result-label">商品價格:</span>
+                            <span class="calc-result-value" id="resItemPrice">-</span>
+                        </div>
+                        <div class="calc-result-row">
+                            <span class="calc-result-label">手續費 (3.5%):</span>
+                            <span class="calc-result-value" id="resFee">-</span>
+                        </div>
+                        <div class="calc-result-row">
+                            <span class="calc-result-label">運費:</span>
+                            <span class="calc-result-value" id="resShipping">-</span>
+                        </div>
+                        <div class="calc-result-row">
+                            <span class="calc-result-label">關稅 (5%):</span>
+                            <span class="calc-result-value" id="resTariff">-</span>
+                        </div>
+                        <div class="calc-result-row">
+                            <span class="calc-result-label">💰 總計:</span>
+                            <span class="calc-result-value" id="resTotal">-</span>
+                        </div>
+                    </div>
+                </div>
             </div>
             <button class="btn btn-tg" id="tgBtn" onclick="sendToTelegram()">🍃 Push to Telegram</button>
         </div>
@@ -192,6 +257,7 @@
 let rawData = null, allHistories = [], conditions = [];
 let activeCondition = 'All', activeDays = 90, currentUrl = '';
 let chart = null, volChart = null;
+let exchangeRates = { usdTwd: 0, jpyTwd: 0, twdJpy: 0 }; // 匯率資料
 
 // ======= WATCHLIST (localStorage) =======
 const WL_KEY = 'snkrdunk_watchlist';
@@ -267,9 +333,89 @@ function extractCardId(url) {
     return m ? m[1] : '';
 }
 
+// ======= 匯率抓取 =======
+async function fetchExchangeRates() {
+    try {
+        // 使用免費的匯率 API (ExchangeRate-API)
+        const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+        const data = await response.json();
+
+        exchangeRates.usdTwd = data.rates.TWD || 32; // USD 對 TWD
+        exchangeRates.jpyTwd = data.rates.TWD / data.rates.JPY || 0.22; // JPY 對 TWD
+        exchangeRates.twdJpy = data.rates.JPY / data.rates.TWD || 4.5; // TWD 對 JPY
+
+        // 更新 UI
+        document.getElementById('usdTwd').textContent = `1 USD = ${exchangeRates.usdTwd.toFixed(2)} TWD`;
+        document.getElementById('jpyTwd').textContent = `1 JPY = ${exchangeRates.jpyTwd.toFixed(4)} TWD`;
+        document.getElementById('twdJpy').textContent = `${exchangeRates.twdJpy.toFixed(2)} JPY`;
+
+        console.log('✅ 匯率已更新:', exchangeRates);
+    } catch (error) {
+        console.error('❌ 匯率抓取失敗:', error);
+        // 使用預設值
+        exchangeRates = { usdTwd: 32, jpyTwd: 0.22, twdJpy: 4.5 };
+        document.getElementById('usdTwd').textContent = '1 USD = 32.00 TWD (預設)';
+        document.getElementById('jpyTwd').textContent = '1 JPY = 0.2200 TWD (預設)';
+        document.getElementById('twdJpy').textContent = '4.50 JPY (預設)';
+    }
+}
+
+// ======= 購入成本計算 =======
+function calculateCost() {
+    const priceUSD = parseFloat(document.getElementById('calcPrice').value) || 0;
+    if (priceUSD <= 0) {
+        document.getElementById('resItemPrice').textContent = '-';
+        document.getElementById('resFee').textContent = '-';
+        document.getElementById('resShipping').textContent = '-';
+        document.getElementById('resTariff').textContent = '-';
+        document.getElementById('resTotal').textContent = '-';
+        return;
+    }
+
+    const FEE_RATE = 0.035; // 手續費 3.5%
+    const SHIPPING_USD = 18; // 運費 $18
+    const TARIFF_RATE = 0.05; // 關稅 5%
+    const TARIFF_THRESHOLD_TWD = 2000; // 關稅門檻 2000 台幣
+
+    // 計算各項費用 (USD)
+    const itemPriceUSD = priceUSD;
+    const feeUSD = priceUSD * FEE_RATE;
+    const shippingUSD = SHIPPING_USD;
+    const subtotalUSD = itemPriceUSD + feeUSD + shippingUSD;
+
+    // 轉換成台幣
+    const itemPriceTWD = itemPriceUSD * exchangeRates.usdTwd;
+    const feeTWD = feeUSD * exchangeRates.usdTwd;
+    const shippingTWD = shippingUSD * exchangeRates.usdTwd;
+    const subtotalTWD = subtotalUSD * exchangeRates.usdTwd;
+
+    // 關稅計算（只有商品價格 > 2000 TWD 才需要）
+    let tariffTWD = 0;
+    let tariffUSD = 0;
+    if (itemPriceTWD > TARIFF_THRESHOLD_TWD) {
+        tariffTWD = itemPriceTWD * TARIFF_RATE;
+        tariffUSD = tariffTWD / exchangeRates.usdTwd;
+    }
+
+    // 總計
+    const totalUSD = subtotalUSD + tariffUSD;
+    const totalTWD = subtotalTWD + tariffTWD;
+
+    // 更新 UI
+    document.getElementById('resItemPrice').textContent = `$${itemPriceUSD.toFixed(2)} USD (${itemPriceTWD.toFixed(0)} TWD)`;
+    document.getElementById('resFee').textContent = `$${feeUSD.toFixed(2)} USD (${feeTWD.toFixed(0)} TWD)`;
+    document.getElementById('resShipping').textContent = `$${shippingUSD.toFixed(2)} USD (${shippingTWD.toFixed(0)} TWD)`;
+    document.getElementById('resTariff').textContent = tariffTWD > 0
+        ? `$${tariffUSD.toFixed(2)} USD (${tariffTWD.toFixed(0)} TWD)`
+        : '免關稅 (< 2000 TWD)';
+    document.getElementById('resTotal').textContent = `$${totalUSD.toFixed(2)} USD ≈ ${totalTWD.toFixed(0)} TWD`;
+}
+
 // Init
 (async () => {
     renderWatchlist();
+    fetchExchangeRates(); // 載入匯率
+    calculateCost(); // 初始化計算器
     try { const r = await fetch('/api/conditions'); const d = await r.json(); conditions = d.conditions || []; } catch(e) {}
 })();
 
