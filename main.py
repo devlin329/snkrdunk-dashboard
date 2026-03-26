@@ -142,6 +142,23 @@ async def scrape_api(req: ScrapeRequest):
         for i, h in enumerate(all_histories[:3]):
             print(f"  [{i}] FULL DATA: {h}")
 
+    # 🔧 價格標準化：移除地區稅費差異 (Vercel 美國IP會多 $10)
+    # 檢測並修正價格，確保全球一致性
+    PRICE_ADJUSTMENT = -10  # 美國 IP 價格比台灣高 $10
+
+    # 檢測是否為美國 IP (透過價格範圍判斷)
+    if all_histories and len(all_histories) >= 3:
+        avg_price = sum(h.get("price", 0) for h in all_histories[:10]) / min(10, len(all_histories))
+        # 如果平均價格 > 70，推測為美國 IP (含稅)
+        if avg_price > 70:
+            print(f"[PRICE_FIX] 檢測到高價區 (avg=${avg_price:.0f})，套用價格修正 {PRICE_ADJUSTMENT}")
+            for h in all_histories:
+                if "price" in h and h["price"] > 0:
+                    h["price"] += PRICE_ADJUSTMENT
+                    # 更新 priceFormat
+                    h["priceFormat"] = f"US ${h['price']}"
+            print(f"[PRICE_FIX] 已修正 {len(all_histories)} 筆交易價格")
+
     response_data = {
         "info": info,
         "condition_prices": condition_prices.get("conditionPrices", []) if condition_prices else [],
