@@ -802,7 +802,7 @@ function renderROI() {
         return;
     }
 
-    // 獲取當前市價（使用平均單一價格，避免多張合賣影響）
+    // 獲取當前市價（使用 price chart 相同邏輯，過濾多張合賣）
     const filtered = allHistories.filter(h => {
         if (item.is_box) {
             return h.size === item.condition;
@@ -811,11 +811,25 @@ function renderROI() {
         }
     });
 
-    // 計算平均價格（取前 10 筆交易）
+    // 使用 cleanForTrend() 清洗價格數據，過濾多張合賣
     let currentPrice = item.buy_price;
     if (filtered.length > 0) {
-        const recentPrices = filtered.slice(0, 10).map(h => h.price);
-        currentPrice = recentPrices.reduce((a, b) => a + b, 0) / recentPrices.length;
+        const recentHistories = filtered.slice(0, 30); // 取前 30 筆作為參考樣本
+        const recentPrices = recentHistories.map(h => h.price);
+
+        // 使用相同的清洗邏輯過濾多張合賣
+        const conditionBaseline = getConditionBaseline(item.condition);
+        const cleanedPrices = cleanForTrend(recentPrices, recentHistories, conditionBaseline);
+
+        // 取清洗後的前 10 筆平均作為當前市價
+        const top10Cleaned = cleanedPrices.slice(0, 10);
+        currentPrice = top10Cleaned.reduce((a, b) => a + b, 0) / top10Cleaned.length;
+
+        console.log(`💰 ROI 當前市價計算 (${item.condition}):`, {
+            原始前10筆: recentPrices.slice(0, 10),
+            清洗後前10筆: top10Cleaned,
+            當前市價: currentPrice.toFixed(2)
+        });
     }
 
     // 計算成本（使用儲存的費用選項）
@@ -887,7 +901,7 @@ function renderROI() {
                 <span class="roi-value">$${currentPrice.toFixed(2)} (${item.condition})</span>
             </div>
             <div class="roi-row" style="font-size:.7rem;color:var(--muted)">
-                <span colspan="2">└ 近 10 筆平均價格</span>
+                <span colspan="2">└ 近 10 筆平均（已過濾多張合賣）</span>
             </div>
             <div class="roi-row total">
                 <span class="roi-label">💵 賣出可得:</span>
