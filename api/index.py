@@ -146,20 +146,25 @@ async def scrape_api(req: ScrapeRequest):
         for i, h in enumerate(all_histories[:3]):
             print(f"  [{i}] FULL DATA: {h}")
 
-    # 🔧 價格標準化：移除地區稅費差異 (美國 IP 價格比台灣高 $10)
-    # Vercel 預設會塞入 VERCEL 環境變數，如果在 Vercel 跑就固定減 10 鎂
-    PRICE_ADJUSTMENT = -10 if os.environ.get("VERCEL") else -10  # 根據使用者要求，這裡全面扣除 10 鎂
+    # 🔧 價格標準化：移除地區稅費差異 (美國 IP 單卡價格比台灣高 $10)
+    # 檢測是否為整盒商品 (Box 商品不需要調整價格)
+    is_box_product = (not condition_prices or not condition_prices.get("conditionPrices")) and \
+                     any(h.get("size", "").lower().find("box") != -1 for h in all_histories[:10])
 
-    if PRICE_ADJUSTMENT != 0:
-        print(f"[PRICE_FIX] 套用全局價格修正：{PRICE_ADJUSTMENT}")
-        
+    if is_box_product:
+        print(f"[PRICE_FIX] 檢測到整盒商品 (Box)，跳過價格調整")
+    else:
+        # 只有單卡商品才套用 -10 USD 調整
+        PRICE_ADJUSTMENT = -10
+        print(f"[PRICE_FIX] 單卡商品，套用價格修正：{PRICE_ADJUSTMENT}")
+
         # 1. 修正歷史成交紀錄
         if all_histories:
             for h in all_histories:
                 if "price" in h and h["price"] > 0:
                     h["price"] += PRICE_ADJUSTMENT
                     h["priceFormat"] = f"US ${h['price']}"
-        
+
         # 2. 修正各狀態最低價 (PSA 10 等)
         if condition_prices and "conditionPrices" in condition_prices:
             for c in condition_prices["conditionPrices"]:

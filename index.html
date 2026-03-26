@@ -372,8 +372,12 @@ function calculateCost() {
         return;
     }
 
+    // 檢測是否為整盒商品
+    const isBoxProduct = rawData && (rawData.condition_prices || []).length === 0 &&
+                         allHistories.some(h => h.size && h.size.includes('box'));
+
     const FEE_RATE = 0.035; // 手續費 3.5%
-    const SHIPPING_USD = 19; // 運費 $19
+    const SHIPPING_USD = isBoxProduct ? 26 : 19; // 運費：Box $26，單卡 $19
     const TARIFF_RATE = 0.05; // 關稅 5%
     const TARIFF_THRESHOLD_TWD = 2000; // 關稅門檻 2000 台幣
 
@@ -444,6 +448,10 @@ async function fetchAll() {
 function render() {
     const info = rawData.info || {};
 
+    // 檢測是否為整盒商品 (無 condition，size 包含 "box")
+    const isBoxProduct = (rawData.condition_prices || []).length === 0 &&
+                         allHistories.some(h => h.size && h.size.includes('box'));
+
     const heroTitle = document.getElementById('heroTitle');
     const heroSub = document.getElementById('heroSub');
     const heroPn = document.getElementById('heroPn');
@@ -462,17 +470,48 @@ function render() {
     const grid = document.getElementById('condGrid');
     if (grid) {
         grid.innerHTML = '';
-        for (const cp of (rawData.condition_prices || [])) {
-            const hl = cp.conditionName === 'PSA 10' ? 'highlight' : '';
-            grid.innerHTML += `<div class="card ${hl}"><div class="card-label">${cp.conditionName}</div><div class="card-val">${cp.minPriceFormat}</div></div>`;
+        if (isBoxProduct) {
+            // 整盒商品：顯示最低價格
+            const minPrice = allHistories.length > 0
+                ? Math.min(...allHistories.map(h => h.price || Infinity))
+                : null;
+            if (minPrice && minPrice !== Infinity) {
+                grid.innerHTML = `<div class="card highlight">
+                    <div class="card-label">📦 Box 最低價</div>
+                    <div class="card-val">US $${minPrice}</div>
+                </div>`;
+            } else {
+                grid.innerHTML = `<div class="card">
+                    <div class="card-label">📦 整盒商品</div>
+                    <div class="card-val">N/A</div>
+                </div>`;
+            }
+        } else {
+            // 單卡商品：顯示各 condition 價格
+            for (const cp of (rawData.condition_prices || [])) {
+                const hl = cp.conditionName === 'PSA 10' ? 'highlight' : '';
+                grid.innerHTML += `<div class="card ${hl}"><div class="card-label">${cp.conditionName}</div><div class="card-val">${cp.minPriceFormat}</div></div>`;
+            }
         }
     }
 
     const tabs = document.getElementById('condTabs');
     if (tabs) {
-        const uniq = [...new Set(allHistories.map(h => h.condition))];
+        const uniq = [...new Set(allHistories.map(h => h.condition))].filter(c => c !== ''); // 過濾空字串
         tabs.innerHTML = `<button class="tab ${activeCondition==='All'?'active':''}" onclick="filterCond('All')">All</button>`;
-        for (const c of uniq) tabs.innerHTML += `<button class="tab ${activeCondition===c?'active':''}" onclick="filterCond('${c}')">${c}</button>`;
+
+        if (isBoxProduct) {
+            // 整盒商品：顯示 box 數量的分類
+            const sizes = [...new Set(allHistories.map(h => h.size).filter(s => s))];
+            for (const s of sizes) {
+                tabs.innerHTML += `<button class="tab ${activeCondition===s?'active':''}" onclick="filterCond('${s}')">${s}</button>`;
+            }
+        } else {
+            // 單卡商品：顯示 condition 分類
+            for (const c of uniq) {
+                tabs.innerHTML += `<button class="tab ${activeCondition===c?'active':''}" onclick="filterCond('${c}')">${c}</button>`;
+            }
+        }
     }
 
     // 重置時間標籤的 active 狀態
@@ -507,7 +546,17 @@ function setTimeRange(days, el) {
 }
 function getFiltered() {
     let d = allHistories;
-    if (activeCondition !== 'All') d = d.filter(h => h.condition === activeCondition);
+    if (activeCondition !== 'All') {
+        // 檢查是否為整盒商品（透過檢查是否有 "box" 關鍵字）
+        const isBoxFilter = activeCondition.includes('box');
+        if (isBoxFilter) {
+            // 整盒商品：根據 size 篩選
+            d = d.filter(h => h.size === activeCondition);
+        } else {
+            // 單卡商品：根據 condition 篩選
+            d = d.filter(h => h.condition === activeCondition);
+        }
+    }
     return d;
 }
 function getTimeFiltered(data) {
@@ -631,10 +680,17 @@ function renderTable() {
     const tbody = document.getElementById('thBody');
     if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="3" class="no-data">No data</td></tr>'; return; }
     tbody.innerHTML = '';
+
+    // 檢測是否為整盒商品
+    const isBoxProduct = filtered.length > 0 && filtered[0].size && filtered[0].size.includes('box');
+
     for (const h of filtered.slice(0, 100)) {
         const d = new Date(h.tradedAt);
         const ds = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-        tbody.innerHTML += `<tr><td>${ds}</td><td><span class="cond-badge">${h.condition}</span></td><td class="price">${h.priceFormat}</td></tr>`;
+
+        // 整盒商品顯示 size，單卡顯示 condition
+        const badge = isBoxProduct ? (h.size || '-') : (h.condition || '-');
+        tbody.innerHTML += `<tr><td>${ds}</td><td><span class="cond-badge">${badge}</span></td><td class="price">${h.priceFormat}</td></tr>`;
     }
 }
 
