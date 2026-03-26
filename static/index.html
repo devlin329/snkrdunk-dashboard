@@ -46,6 +46,29 @@
         .wl-item:hover .wl-remove { opacity: 1; }
         .wl-remove:hover { color: var(--rust); }
 
+        /* ======= PORTFOLIO ======= */
+        .portfolio-section { margin-top: 24px; padding-top: 20px; border-top: 2px solid var(--border); }
+        .portfolio-summary { background: rgba(122,145,119,.08); border: 1px solid rgba(122,145,119,.2); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+        .portfolio-summary .summary-row { display: flex; justify-content: space-between; font-size: .75rem; margin-bottom: 4px; }
+        .portfolio-summary .summary-row:last-child { margin-bottom: 0; padding-top: 6px; border-top: 1px solid var(--border); font-weight: 700; font-size: .82rem; }
+        .portfolio-summary .summary-label { color: var(--text-sec); }
+        .portfolio-summary .summary-value { font-weight: 600; }
+        .portfolio-summary .roi-positive { color: var(--sage); }
+        .portfolio-summary .roi-negative { color: var(--rust); }
+        .portfolio-summary .roi-neutral { color: var(--muted); }
+
+        .pf-item { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 10px; cursor: pointer; transition: .2s; margin-bottom: 6px; border: 1px solid var(--border); background: var(--card); }
+        .pf-item:hover { transform: translateY(-1px); box-shadow: 0 2px 8px var(--shadow); }
+        .pf-item.profit { border-left: 3px solid var(--sage); }
+        .pf-item.loss { border-left: 3px solid var(--rust); }
+        .pf-item img { width: 32px; height: 42px; object-fit: contain; border-radius: 4px; background: var(--bg); flex-shrink: 0; }
+        .pf-item .pf-info { flex: 1; min-width: 0; }
+        .pf-item .pf-name { font-size: .7rem; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pf-item .pf-prices { font-size: .65rem; color: var(--text-sec); margin-top: 2px; }
+        .pf-item .pf-roi { font-size: .68rem; font-weight: 700; margin-top: 2px; }
+        .pf-item .pf-roi.profit { color: var(--sage); }
+        .pf-item .pf-roi.loss { color: var(--rust); }
+
         /* ======= MAIN CONTENT ======= */
         .main { flex: 1; padding: 28px 20px; display: flex; flex-direction: column; align-items: center; min-width: 0; }
         .header { text-align: center; margin-bottom: 22px; }
@@ -124,6 +147,45 @@
         .exchange-rate .rate-label { color: var(--muted); font-weight: 500; }
         .exchange-rate .rate-value { font-weight: 700; color: var(--primary); font-size: .85rem; }
 
+        /* ======= ROI 分析區 ======= */
+        .roi-analysis { background: var(--card); border-radius: 12px; padding: 16px; border: 1px solid var(--border); margin-bottom: 12px; box-shadow: 0 1px 8px var(--shadow); }
+        .roi-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .roi-header h3 { font-size: .85rem; font-weight: 600; color: var(--accent); }
+        .roi-actions { display: flex; gap: 6px; }
+        .roi-actions button { padding: 4px 10px; font-size: .7rem; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text-sec); cursor: pointer; transition: .2s; }
+        .roi-actions button:hover { background: var(--primary-light); color: #fff; border-color: var(--primary); }
+        .roi-box { background: rgba(192,120,76,.05); border-radius: 8px; padding: 10px; margin-bottom: 10px; border: 1px solid rgba(192,120,76,.1); }
+        .roi-box h4 { font-size: .75rem; color: var(--accent); margin-bottom: 8px; font-weight: 600; }
+        .roi-row { display: flex; justify-content: space-between; font-size: .78rem; margin-bottom: 4px; }
+        .roi-row:last-child { margin-bottom: 0; }
+        .roi-row.total { padding-top: 6px; border-top: 1px solid var(--border); font-weight: 700; font-size: .82rem; }
+        .roi-label { color: var(--text-sec); }
+        .roi-value { font-weight: 600; color: var(--text); }
+        .roi-result { background: var(--bg-warm); border-radius: 8px; padding: 12px; text-align: center; }
+        .roi-result .roi-amount { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+        .roi-result .roi-amount.profit { color: var(--sage); }
+        .roi-result .roi-amount.loss { color: var(--rust); }
+        .roi-result .roi-tip { font-size: .72rem; color: var(--muted); margin-top: 6px; }
+
+        /* ======= 對話框 ======= */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 9999; animation: fadeIn 0.2s; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: var(--card); border-radius: 14px; padding: 20px; max-width: 400px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.2); animation: slideUp 0.3s cubic-bezier(.175,.885,.32,1.275); }
+        .modal h3 { font-size: .95rem; font-weight: 700; color: var(--primary); margin-bottom: 16px; }
+        .modal-row { margin-bottom: 14px; }
+        .modal-row label { display: block; font-size: .75rem; font-weight: 600; color: var(--text-sec); margin-bottom: 6px; }
+        .modal-row input, .modal-row select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: .85rem; }
+        .modal-row input:focus, .modal-row select:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(192,120,76,0.08); }
+        .modal-tip { background: rgba(122,145,119,.08); border-radius: 8px; padding: 10px; font-size: .72rem; color: var(--text-sec); margin-bottom: 16px; line-height: 1.5; }
+        .modal-actions { display: flex; gap: 8px; }
+        .modal-actions button { flex: 1; padding: 11px; border-radius: 8px; border: none; font-weight: 600; font-size: .82rem; cursor: pointer; transition: .2s; }
+        .btn-cancel { background: var(--bg-warm); color: var(--text-sec); }
+        .btn-cancel:hover { background: var(--muted); }
+        .btn-save { background: var(--sage); color: #fff; }
+        .btn-save:hover { background: var(--sage-light); transform: translateY(-1px); }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
         /* ======= 購入成本試算器 ======= */
         .cost-calculator { background: var(--card); border-radius: 12px; padding: 16px; border: 1px solid var(--border); margin-bottom: 12px; box-shadow: 0 1px 8px var(--shadow); }
         .calc-input-row { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
@@ -149,6 +211,13 @@
     <aside class="sidebar" id="sidebar">
         <h2>📌 關注清單</h2>
         <div id="watchlist"></div>
+
+        <!-- 投資組合 -->
+        <div class="portfolio-section">
+            <h2>💼 我的投資組合</h2>
+            <div id="portfolioSummary"></div>
+            <div id="portfolio"></div>
+        </div>
     </aside>
 
     <!-- ======= MAIN ======= -->
@@ -162,6 +231,7 @@
                 <input type="text" id="urlInput" placeholder="Paste Snkrdunk card URL..." value="https://snkrdunk.com/en/trading-cards/706813">
                 <button class="btn btn-primary" id="scrapeBtn" onclick="fetchAll()">Analyze</button>
                 <button class="btn btn-add" id="addBtn" onclick="addToWatchlist()" style="display:none" title="加入關注清單">+ 關注</button>
+                <button class="btn btn-add" id="addPortfolioBtn" onclick="openAddPortfolioModal()" style="display:none" title="加入投資組合">💼 加投資組合</button>
             </div>
             <div class="loader" id="loader"><div class="spinner"></div><span style="color:var(--muted)">Fetching market data...</span></div>
 
@@ -247,17 +317,61 @@
                     <div class="chart-stats" id="chartStats"></div>
                     <div class="outlier-note" id="outlierNote"></div>
                 </div>
+
+                <!-- ROI 分析區 -->
+                <div class="roi-analysis" id="roiAnalysis" style="display:none;">
+                    <div class="roi-header">
+                        <h3>💼 投資報酬分析</h3>
+                        <div class="roi-actions">
+                            <button onclick="editPortfolioItem()">編輯</button>
+                            <button onclick="removePortfolioItem()">移除</button>
+                        </div>
+                    </div>
+                    <div id="roiContent"></div>
+                </div>
             </div>
             <button class="btn btn-tg" id="tgBtn" onclick="sendToTelegram()">🍃 Push to Telegram</button>
         </div>
     </div>
     <div id="toast">✅ Done!</div>
 
+    <!-- 加入投資組合對話框 -->
+    <div class="modal-overlay" id="portfolioModal">
+        <div class="modal">
+            <h3>💼 加入投資組合</h3>
+            <div class="modal-row">
+                <label>卡片名稱</label>
+                <input type="text" id="modalCardName" readonly>
+            </div>
+            <div class="modal-row">
+                <label>等級/規格</label>
+                <select id="modalCondition"></select>
+            </div>
+            <div class="modal-row">
+                <label>購入價格 (USD)</label>
+                <input type="number" id="modalBuyPrice" placeholder="50" min="0" step="0.01">
+            </div>
+            <div class="modal-tip">
+                💡 提示：<br>
+                • 只需填寫商品價格，不含運費<br>
+                • 系統會自動計算手續費、運費、關稅
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closePortfolioModal()">取消</button>
+                <button class="btn-save" onclick="savePortfolioItem()">💾 儲存</button>
+            </div>
+        </div>
+    </div>
+
 <script>
 let rawData = null, allHistories = [], conditions = [];
 let activeCondition = 'All', activeDays = 90, currentUrl = '';
 let chart = null, volChart = null;
 let exchangeRates = { usdTwd: 0, jpyTwd: 0, twdJpy: 0 }; // 匯率資料
+let currentPortfolioKey = null; // 當前查看的投資項目
+
+// ======= PORTFOLIO (localStorage) =======
+const PF_KEY = 'snkrdunk_portfolio';
 
 // ======= WATCHLIST (localStorage) =======
 const WL_KEY = 'snkrdunk_watchlist';
@@ -266,6 +380,11 @@ function loadWatchlist() {
     try { return JSON.parse(localStorage.getItem(WL_KEY)) || []; } catch { return []; }
 }
 function saveWatchlist(list) { localStorage.setItem(WL_KEY, JSON.stringify(list)); }
+
+function loadPortfolio() {
+    try { return JSON.parse(localStorage.getItem(PF_KEY)) || {}; } catch { return {}; }
+}
+function savePortfolio(portfolio) { localStorage.setItem(PF_KEY, JSON.stringify(portfolio)); }
 
 function renderWatchlist() {
     const list = loadWatchlist();
@@ -326,6 +445,345 @@ function removeFromWatchlist(cardId) {
     list = list.filter(x => x.cardId !== cardId);
     saveWatchlist(list);
     renderWatchlist();
+}
+
+// ======= PORTFOLIO FUNCTIONS =======
+function getPortfolioKey(cardId, condition) {
+    return `${cardId}_${condition.replace(/\s+/g, '_')}`;
+}
+
+function renderPortfolio() {
+    const portfolio = loadPortfolio();
+    const summaryEl = document.getElementById('portfolioSummary');
+    const el = document.getElementById('portfolio');
+
+    const items = Object.values(portfolio);
+    if (items.length === 0) {
+        summaryEl.innerHTML = '';
+        el.innerHTML = '<div class="wl-empty">尚無投資項目<br>分析卡片後點擊「💼 加投資組合」</div>';
+        return;
+    }
+
+    // 計算總覽
+    let totalCost = 0, totalValue = 0;
+    items.forEach(item => {
+        const cost = calculateTotalCost(item.buy_price, item.is_box);
+        totalCost += cost;
+        // 當前價值需要重新抓取，這裡先用買入價估算
+        totalValue += cost; // 暫時用成本，實際會在點擊時更新
+    });
+    const totalROI = totalCost > 0 ? ((totalValue - totalCost) / totalCost * 100) : 0;
+    const roiClass = totalROI > 0 ? 'roi-positive' : totalROI < 0 ? 'roi-negative' : 'roi-neutral';
+
+    summaryEl.innerHTML = `
+        <div class="portfolio-summary">
+            <div class="summary-row">
+                <span class="summary-label">總投資:</span>
+                <span class="summary-value">$${totalCost.toFixed(2)}</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">當前價值:</span>
+                <span class="summary-value">$${totalValue.toFixed(2)}</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">總報酬:</span>
+                <span class="summary-value ${roiClass}">
+                    ${totalROI >= 0 ? '+' : ''}$${(totalValue - totalCost).toFixed(2)}
+                    (${totalROI >= 0 ? '+' : ''}${totalROI.toFixed(1)}%)
+                    ${totalROI > 0 ? '📈' : totalROI < 0 ? '📉' : '➡️'}
+                </span>
+            </div>
+        </div>
+    `;
+
+    el.innerHTML = items.map(item => {
+        const cost = calculateTotalCost(item.buy_price, item.is_box);
+        const currentPrice = item.buy_price; // 暫時顯示買入價，點擊後會更新
+        const sellProceeds = currentPrice * 0.965;
+        const roi = ((sellProceeds - cost) / cost * 100);
+        const roiClass = roi > 0 ? 'profit' : roi < 0 ? 'loss' : '';
+
+        return `
+            <div class="pf-item ${roiClass}" onclick="loadPortfolioCard('${item.card_id}', '${item.condition}')">
+                <img src="${item.card_image || 'https://via.placeholder.com/40x50'}" alt="${item.card_name}" />
+                <div class="pf-info">
+                    <div class="pf-name">${item.card_name}</div>
+                    <div class="pf-prices">買 $${item.buy_price} → 現 $${currentPrice}</div>
+                    <div class="pf-roi ${roiClass}">
+                        ${roi >= 0 ? '+' : ''}$${(sellProceeds - cost).toFixed(2)}
+                        (${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%)
+                        ${roi > 0 ? '📈' : roi < 0 ? '📉' : '➡️'}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function calculateTotalCost(buyPrice, isBox) {
+    const FEE_RATE = 0.035;
+    const SHIPPING = isBox ? 26 : 19;
+    const TARIFF_RATE = 0.05;
+    const TARIFF_THRESHOLD_TWD = 2000;
+
+    const itemPrice = buyPrice;
+    const fee = buyPrice * FEE_RATE;
+    const shipping = SHIPPING;
+    const subtotal = itemPrice + fee + shipping;
+
+    // 關稅計算
+    const itemPriceTWD = itemPrice * exchangeRates.usdTwd;
+    let tariff = 0;
+    if (itemPriceTWD > TARIFF_THRESHOLD_TWD) {
+        const tariffTWD = itemPriceTWD * TARIFF_RATE;
+        tariff = tariffTWD / exchangeRates.usdTwd;
+    }
+
+    return subtotal + tariff;
+}
+
+async function loadPortfolioCard(cardId, condition) {
+    const url = `https://snkrdunk.com/en/trading-cards/${cardId}`;
+    document.getElementById('urlInput').value = url;
+    await fetchAll();
+
+    // 設置當前投資組合項目
+    const key = getPortfolioKey(cardId, condition);
+    currentPortfolioKey = key;
+
+    // 顯示 ROI 分析
+    renderROI();
+
+    // 滾動到 ROI 區域
+    setTimeout(() => {
+        document.getElementById('roiAnalysis').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 500);
+}
+
+function openAddPortfolioModal() {
+    if (!rawData) return;
+
+    const modal = document.getElementById('portfolioModal');
+    const info = rawData.info || {};
+
+    // 填入卡片名稱
+    document.getElementById('modalCardName').value = info.title || 'Unknown Card';
+
+    // 填入條件選項
+    const conditionSelect = document.getElementById('modalCondition');
+    conditionSelect.innerHTML = '';
+
+    const isBox = (rawData.condition_prices || []).length === 0 &&
+                  allHistories.some(h => h.size && h.size.includes('box'));
+
+    if (isBox) {
+        // Box 商品：顯示 size 選項
+        const sizes = [...new Set(allHistories.map(h => h.size).filter(s => s))];
+        sizes.forEach(s => {
+            conditionSelect.innerHTML += `<option value="${s}">${s}</option>`;
+        });
+    } else {
+        // 單卡：顯示 condition 選項
+        const conditions = [...new Set(allHistories.map(h => h.condition).filter(c => c))];
+        conditions.forEach(c => {
+            conditionSelect.innerHTML += `<option value="${c}">${c}</option>`;
+        });
+    }
+
+    // 顯示對話框
+    modal.classList.add('show');
+}
+
+function closePortfolioModal() {
+    document.getElementById('portfolioModal').classList.remove('show');
+    document.getElementById('modalBuyPrice').value = '';
+}
+
+function savePortfolioItem() {
+    const buyPrice = parseFloat(document.getElementById('modalBuyPrice').value);
+    if (!buyPrice || buyPrice <= 0) {
+        alert('請輸入有效的購入價格');
+        return;
+    }
+
+    const portfolio = loadPortfolio();
+    const info = rawData.info || {};
+    const condition = document.getElementById('modalCondition').value;
+    const cardId = extractCardId(currentUrl);
+
+    const isBox = (rawData.condition_prices || []).length === 0 &&
+                  allHistories.some(h => h.size && h.size.includes('box'));
+
+    const key = getPortfolioKey(cardId, condition);
+
+    portfolio[key] = {
+        card_id: cardId,
+        card_name: info.title || 'Unknown Card',
+        card_image: info.thumbnail_url || '',
+        condition: condition,
+        buy_price: buyPrice,
+        is_box: isBox,
+        added_at: new Date().toISOString()
+    };
+
+    savePortfolio(portfolio);
+    renderPortfolio();
+    closePortfolioModal();
+    showToast('✅ 已加入投資組合');
+
+    // 設置當前項目並顯示 ROI
+    currentPortfolioKey = key;
+    renderROI();
+}
+
+function editPortfolioItem() {
+    if (!currentPortfolioKey) return;
+
+    const portfolio = loadPortfolio();
+    const item = portfolio[currentPortfolioKey];
+    if (!item) return;
+
+    const newPrice = prompt('輸入新的購入價格 (USD):', item.buy_price);
+    if (newPrice === null) return;
+
+    const price = parseFloat(newPrice);
+    if (isNaN(price) || price <= 0) {
+        alert('請輸入有效的價格');
+        return;
+    }
+
+    item.buy_price = price;
+    savePortfolio(portfolio);
+    renderPortfolio();
+    renderROI();
+    showToast('✅ 已更新購入價格');
+}
+
+function removePortfolioItem() {
+    if (!currentPortfolioKey) return;
+
+    if (!confirm('確定要移除此投資項目？')) return;
+
+    const portfolio = loadPortfolio();
+    delete portfolio[currentPortfolioKey];
+    savePortfolio(portfolio);
+    renderPortfolio();
+
+    document.getElementById('roiAnalysis').style.display = 'none';
+    currentPortfolioKey = null;
+    showToast('✅ 已移除投資項目');
+}
+
+function renderROI() {
+    if (!currentPortfolioKey) {
+        document.getElementById('roiAnalysis').style.display = 'none';
+        return;
+    }
+
+    const portfolio = loadPortfolio();
+    const item = portfolio[currentPortfolioKey];
+    if (!item) {
+        document.getElementById('roiAnalysis').style.display = 'none';
+        return;
+    }
+
+    // 獲取當前市價（最近一筆成交）
+    const filtered = allHistories.filter(h => {
+        if (item.is_box) {
+            return h.size === item.condition;
+        } else {
+            return h.condition === item.condition;
+        }
+    });
+
+    const currentPrice = filtered.length > 0 ? filtered[0].price : item.buy_price;
+
+    // 計算成本
+    const totalCost = calculateTotalCost(item.buy_price, item.is_box);
+
+    // 計算賣出可得
+    const sellProceeds = currentPrice * 0.965;
+
+    // 計算 ROI
+    const profit = sellProceeds - totalCost;
+    const roiPercent = (profit / totalCost * 100);
+    const roiClass = roiPercent > 0 ? 'profit' : roiPercent < 0 ? 'loss' : '';
+
+    // 計算回本價
+    const breakEvenPrice = totalCost / 0.965;
+    const target10Price = totalCost * 1.1 / 0.965;
+
+    const content = `
+        <div class="roi-box">
+            <h4>你的持倉</h4>
+            <div class="roi-row">
+                <span class="roi-label">購入價格:</span>
+                <span class="roi-value">$${item.buy_price.toFixed(2)} USD</span>
+            </div>
+            <div class="roi-row">
+                <span class="roi-label">等級/規格:</span>
+                <span class="roi-value">${item.condition}</span>
+            </div>
+        </div>
+
+        <div class="roi-box">
+            <h4>📦 成本明細</h4>
+            <div class="roi-row">
+                <span class="roi-label">商品價格:</span>
+                <span class="roi-value">$${item.buy_price.toFixed(2)}</span>
+            </div>
+            <div class="roi-row">
+                <span class="roi-label">手續費 (3.5%):</span>
+                <span class="roi-value">$${(item.buy_price * 0.035).toFixed(2)}</span>
+            </div>
+            <div class="roi-row">
+                <span class="roi-label">運費:</span>
+                <span class="roi-value">$${item.is_box ? '26.00' : '19.00'}</span>
+            </div>
+            <div class="roi-row">
+                <span class="roi-label">關稅 (5%):</span>
+                <span class="roi-value">$${(totalCost - item.buy_price * 1.035 - (item.is_box ? 26 : 19)).toFixed(2)}</span>
+            </div>
+            <div class="roi-row total">
+                <span class="roi-label">💰 購入總成本:</span>
+                <span class="roi-value">$${totalCost.toFixed(2)} USD</span>
+            </div>
+        </div>
+
+        <div class="roi-box">
+            <h4>📊 當前估值</h4>
+            <div class="roi-row">
+                <span class="roi-label">當前市價:</span>
+                <span class="roi-value">$${currentPrice.toFixed(2)} (${item.condition})</span>
+            </div>
+            <div class="roi-row" style="font-size:.7rem;color:var(--muted)">
+                <span colspan="2">└ 最近一筆成交</span>
+            </div>
+            <div class="roi-row total">
+                <span class="roi-label">💵 賣出可得:</span>
+                <span class="roi-value">$${sellProceeds.toFixed(2)} USD</span>
+            </div>
+            <div class="roi-row" style="font-size:.7rem;color:var(--muted)">
+                <span colspan="2">└ 扣除手續費 3.5%</span>
+            </div>
+        </div>
+
+        <div class="roi-result">
+            <div class="roi-amount ${roiClass}">
+                ${roiPercent >= 0 ? '📈' : '📉'}
+                ${roiPercent >= 0 ? '獲利' : '虧損'}:
+                ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}
+                (${roiPercent >= 0 ? '+' : ''}${roiPercent.toFixed(1)}%)
+            </div>
+            <div class="roi-tip">
+                💡 需漲到 $${breakEvenPrice.toFixed(0)} 可回本<br>
+                🎯 若漲到 $${target10Price.toFixed(0)} 可獲利 +10%
+            </div>
+        </div>
+    `;
+
+    document.getElementById('roiContent').innerHTML = content;
+    document.getElementById('roiAnalysis').style.display = 'block';
 }
 
 function extractCardId(url) {
@@ -418,6 +876,7 @@ function calculateCost() {
 // Init
 (async () => {
     renderWatchlist();
+    renderPortfolio(); // 載入投資組合
     fetchExchangeRates(); // 載入匯率
     calculateCost(); // 初始化計算器
     try { const r = await fetch('/api/conditions'); const d = await r.json(); conditions = d.conditions || []; } catch(e) {}
@@ -531,6 +990,20 @@ function render() {
     if (dashboard) dashboard.classList.add('visible');
     if (tgBtn) tgBtn.style.display = 'block';
     if (addBtn) addBtn.style.display = 'inline-flex';
+
+    // 顯示「加投資組合」按鈕
+    const addPortfolioBtn = document.getElementById('addPortfolioBtn');
+    if (addPortfolioBtn) addPortfolioBtn.style.display = 'inline-flex';
+
+    // 檢查是否已在投資組合中，如果是則顯示 ROI
+    const cardId = extractCardId(currentUrl);
+    const portfolio = loadPortfolio();
+    Object.keys(portfolio).forEach(key => {
+        if (key.startsWith(cardId + '_')) {
+            currentPortfolioKey = key;
+            renderROI();
+        }
+    });
 }
 
 function filterCond(c) {
