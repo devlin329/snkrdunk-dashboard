@@ -583,6 +583,8 @@ function renderPortfolio() {
 
     // 計算總覽
     let totalCost = 0, totalValue = 0;
+    const currentCardId = extractCardId(currentUrl);
+
     items.forEach(item => {
         const costResult = calculateTotalCost(item.buy_price, item.is_box, {
             include_fee: item.include_fee,
@@ -591,9 +593,34 @@ function renderPortfolio() {
             shipping_amount: item.shipping_amount
         });
         totalCost += costResult.total;
-        // 當前價值需要重新抓取，這裡先用買入價估算
-        totalValue += costResult.total; // 暫時用成本，實際會在點擊時更新
+
+        // 計算當前價值
+        let itemValue = costResult.total; // 預設用成本
+
+        // 如果是當前查詢的卡片且有數據，使用實際市價
+        if (currentCardId === item.card_id && allHistories.length > 0) {
+            const filtered = allHistories.filter(h => {
+                if (item.is_box) {
+                    return h.size === item.condition;
+                } else {
+                    return h.condition === item.condition;
+                }
+            });
+
+            if (filtered.length > 0) {
+                const recentHistories = filtered.slice(0, 30);
+                const recentPrices = recentHistories.map(h => h.price);
+                const conditionBaseline = getConditionBaseline(item.condition);
+                const cleanedPrices = cleanForTrend(recentPrices, recentHistories, conditionBaseline);
+                const top10Cleaned = cleanedPrices.slice(0, 10);
+                const currentPrice = top10Cleaned.reduce((a, b) => a + b, 0) / top10Cleaned.length;
+                itemValue = currentPrice * 0.965; // 賣出可得金額
+            }
+        }
+
+        totalValue += itemValue;
     });
+
     const totalROI = totalCost > 0 ? ((totalValue - totalCost) / totalCost * 100) : 0;
     const roiClass = totalROI > 0 ? 'roi-positive' : totalROI < 0 ? 'roi-negative' : 'roi-neutral';
 
