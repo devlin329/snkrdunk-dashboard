@@ -168,21 +168,105 @@
         .roi-result .roi-tip { font-size: .72rem; color: var(--muted); margin-top: 6px; }
 
         /* ======= 對話框 ======= */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 9999; animation: fadeIn 0.2s; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 9999; animation: fadeIn 0.2s; }
         .modal-overlay.show { display: flex; }
-        .modal { background: var(--card); border-radius: 14px; padding: 20px; max-width: 400px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.2); animation: slideUp 0.3s cubic-bezier(.175,.885,.32,1.275); }
-        .modal h3 { font-size: .95rem; font-weight: 700; color: var(--primary); margin-bottom: 16px; }
-        .modal-row { margin-bottom: 14px; }
-        .modal-row label { display: block; font-size: .75rem; font-weight: 600; color: var(--text-sec); margin-bottom: 6px; }
-        .modal-row input, .modal-row select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: .85rem; }
-        .modal-row input:focus, .modal-row select:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(192,120,76,0.08); }
-        .modal-tip { background: rgba(122,145,119,.08); border-radius: 8px; padding: 10px; font-size: .72rem; color: var(--text-sec); margin-bottom: 16px; line-height: 1.5; }
-        .modal-actions { display: flex; gap: 8px; }
-        .modal-actions button { flex: 1; padding: 11px; border-radius: 8px; border: none; font-weight: 600; font-size: .82rem; cursor: pointer; transition: .2s; }
+        .modal { background: var(--card); border-radius: 16px; padding: 28px 24px; max-width: 440px; width: 90%; max-height: 85vh; overflow-y: auto; box-shadow: 0 12px 48px rgba(0,0,0,0.3); animation: slideUp 0.3s cubic-bezier(.175,.885,.32,1.275); }
+        .modal h3 { font-size: 1.15rem; font-weight: 700; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .modal h4 { font-size: 1rem; font-weight: 600; color: var(--sage); margin: 20px 0 12px 0; }
+        .modal-section { margin-top: 20px; }
+        .modal-row { margin-bottom: 16px; }
+        .modal-row label { display: block; font-size: .88rem; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+        .modal-row input[type="text"],
+        .modal-row input[type="number"],
+        .modal-row select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 2px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: .95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .modal-row input:focus,
+        .modal-row select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(192,120,76,0.12);
+        }
+        .modal-row input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--sage);
+        }
+        .modal-row.total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 2px solid var(--border);
+            font-size: 1.05rem;
+        }
+        .modal-tip {
+            background: rgba(122,145,119,.12);
+            border-left: 4px solid var(--sage);
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-size: .85rem;
+            color: var(--text-sec);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .modal-row.fee-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            background: var(--bg-warm);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .fee-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            margin: 0;
+        }
+        .fee-label {
+            font-size: .92rem;
+            font-weight: 600;
+            color: var(--text);
+            user-select: none;
+        }
+        .fee-amount {
+            font-size: .92rem;
+            font-weight: 700;
+            color: var(--sage);
+            min-width: 70px;
+            text-align: right;
+        }
+        .fee-input {
+            width: 90px !important;
+            padding: 8px 10px !important;
+            text-align: right;
+            font-size: .9rem !important;
+            font-weight: 600;
+        }
+        .total-amount {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+        .modal-actions button { flex: 1; padding: 13px; border-radius: 10px; border: none; font-weight: 700; font-size: .9rem; cursor: pointer; transition: .2s; }
         .btn-cancel { background: var(--bg-warm); color: var(--text-sec); }
         .btn-cancel:hover { background: var(--muted); }
         .btn-save { background: var(--sage); color: #fff; }
-        .btn-save:hover { background: var(--sage-light); transform: translateY(-1px); }
+        .btn-save:hover { background: #6d8469; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(122,145,119,0.3); }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -353,36 +437,36 @@
             </div>
 
             <div class="modal-section">
-                <h4 style="margin:12px 0 8px 0;font-size:.9rem;color:var(--sage)">📦 額外費用 (可選)</h4>
+                <h4>📦 額外費用 (可選)</h4>
 
-                <div class="modal-row">
-                    <label style="display:flex;align-items:center;gap:8px">
+                <div class="modal-row fee-row">
+                    <label class="fee-checkbox">
                         <input type="checkbox" id="modalIncludeFee" checked onchange="updateModalCostPreview()">
-                        <span>手續費 (3.5%)</span>
+                        <span class="fee-label">手續費 (3.5%)</span>
                     </label>
-                    <span id="modalFeeAmount" style="color:var(--muted);font-size:.85rem">$0.00</span>
+                    <span id="modalFeeAmount" class="fee-amount">$0.00</span>
                 </div>
 
-                <div class="modal-row">
-                    <label style="display:flex;align-items:center;gap:8px">
+                <div class="modal-row fee-row">
+                    <label class="fee-checkbox">
                         <input type="checkbox" id="modalIncludeShipping" checked onchange="updateModalCostPreview()">
-                        <span>運費</span>
+                        <span class="fee-label">運費</span>
                     </label>
                     <input type="number" id="modalShippingAmount" value="19" min="0" step="0.01"
-                           style="width:80px;text-align:right" oninput="updateModalCostPreview()">
+                           class="fee-input" oninput="updateModalCostPreview()">
                 </div>
 
-                <div class="modal-row">
-                    <label style="display:flex;align-items:center;gap:8px">
+                <div class="modal-row fee-row">
+                    <label class="fee-checkbox">
                         <input type="checkbox" id="modalIncludeTariff" checked onchange="updateModalCostPreview()">
-                        <span>關稅 (5%)</span>
+                        <span class="fee-label">關稅 (5%)</span>
                     </label>
-                    <span id="modalTariffAmount" style="color:var(--muted);font-size:.85rem">$0.00</span>
+                    <span id="modalTariffAmount" class="fee-amount">$0.00</span>
                 </div>
 
-                <div class="modal-row total" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-                    <span style="font-weight:600">💰 購入總成本:</span>
-                    <span id="modalTotalCost" style="font-weight:600;color:var(--sage)">$0.00 USD</span>
+                <div class="modal-row total">
+                    <span>💰 購入總成本:</span>
+                    <span id="modalTotalCost" class="total-amount">$0.00 USD</span>
                 </div>
             </div>
 
