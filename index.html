@@ -395,58 +395,73 @@ function getConditionBaseline(condition) {
 }
 
 /**
- * 🧹 局部鄰近清洗 — 偵測多張捆綁交易
- * 完全依賴「局部鄰近期間 (Local Window)」的中位數，找出真正的捆綁交易。
- * 不使用全域眾數 (Global Mode)，避免將兩個月前的高價位誤判成「多張捆綁」而強行除半。
+ * 🧹 強化版捆綁交易偵測 — IQR + 局部視窗雙重驗證
+ * 策略：先用 IQR 找出全域離群值，再用局部視窗嘗試所有可能倍數 (2-20x) 找最佳修正
  */
 function cleanForTrend(prices, histories = [], conditionBaseline = null) {
     if (prices.length < 5) return [...prices];
 
-    // 滑動視窗半徑（前後視角：各看 10 筆交易）
-    const radius = 10;
-    // 門檻：如果在局部期間，這個價格是周圍中位數的 1.7 倍以上，推測為多張捆綁
-    const threshold = 1.7;
-    
-    console.log(`🧹 開始局部鄰近清洗 (Window = ±${radius}, 門檻 = ${threshold}x)`);
+    // Step 1: IQR 離群值檢測 (找出可疑的多張捆綁)
+    const sorted = [...prices].sort((a, b) => a - b);
+    const q1 = sorted[Math.floor(sorted.length * 0.25)];
+    const q3 = sorted[Math.floor(sorted.length * 0.75)];
+    const iqr = q3 - q1;
+    const upperBound = q3 + 1.5 * iqr; // IQR 標準上界
+    const globalMedian = sorted[Math.floor(sorted.length / 2)];
+
+    console.log(`📊 IQR 分析: Q1=$${q1}, Q3=$${q3}, IQR=$${iqr}, 上界=$${upperBound}, 中位數=$${globalMedian}`);
+
+    // Step 2: 對每個價格進行雙重驗證
+    const radius = 15; // 加大視窗半徑，確保有足夠參考
     let totalCorrections = 0;
 
     const result = prices.map((p, i) => {
-        // 收集時間鄰近價格（排除自身）
+        // 如果價格在合理範圍內，直接保留
+        if (p <= upperBound) return p;
+
+        // 收集局部鄰近價格
         const neighbors = [];
         for (let j = Math.max(0, i - radius); j < Math.min(prices.length, i + radius + 1); j++) {
             if (j !== i) neighbors.push(prices[j]);
         }
-        
+
         if (neighbors.length < 3) return p;
 
-        // 計算局部中位數 (Local Median)
         neighbors.sort((a, b) => a - b);
         const localMedian = neighbors[Math.floor(neighbors.length / 2)];
-        if (localMedian <= 0) return p;
 
-        const ratio = p / localMedian;
+        // Step 3: 嘗試所有可能的倍數 (2x-20x)，找出最佳修正
+        let bestCorrection = p;
+        let bestScore = Infinity;
+        let bestMult = 1;
 
-        // 如果目前價格超過局部中位數的指定倍數，尋找最接近的整數倍
-        if (ratio >= threshold) {
-            const mult = Math.round(ratio); // ex: 350 / 160 = 2.18 -> 2
-            if (mult >= 2) {
-                const corrected = p / mult;
-                // 確保修正後的結果跟局部中位數差距不要太大 (例如 ±40% 以內)
-                const relativeDiff = Math.abs(corrected - localMedian) / localMedian;
-                if (relativeDiff < 0.40) {
-                    const roundedCorrected = Math.round(corrected);
-                    console.log(`✅ Corrected (Local Window): $${p} → $${roundedCorrected} (${mult}x, 當時中位數: $${localMedian})`);
-                    totalCorrections++;
-                    return roundedCorrected;
-                }
+        for (let mult = 2; mult <= 20; mult++) {
+            const corrected = p / mult;
+
+            // 評分：同時考慮全域中位數和局部中位數的距離
+            const globalDist = Math.abs(corrected - globalMedian) / globalMedian;
+            const localDist = Math.abs(corrected - localMedian) / localMedian;
+            const score = globalDist * 0.4 + localDist * 0.6; // 局部權重較高
+
+            // 只接受修正後價格在合理範圍內的倍數 (距離中位數 ±40% 以內)
+            if (score < bestScore && globalDist < 0.4 && localDist < 0.4) {
+                bestCorrection = corrected;
+                bestScore = score;
+                bestMult = mult;
             }
         }
-        
-        // 正常單張合理波動，保留原價
+
+        if (bestMult > 1) {
+            const rounded = Math.round(bestCorrection);
+            console.log(`✅ 修正捆綁交易: $${p} → $${rounded} (${bestMult}x, 局部中位=$${localMedian}, 全域中位=$${globalMedian})`);
+            totalCorrections++;
+            return rounded;
+        }
+
         return p;
     });
 
-    console.log(`✨ 局部修正總筆數: ${totalCorrections}`);
+    console.log(`✨ 總修正筆數: ${totalCorrections}/${prices.length}`);
     return result;
 }
 
