@@ -1,0 +1,13 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- 簡化版 Favicon - 只保留核心元素 -->
+
+  <!-- 卡片外框 -->
+  <rect x="4" y="4" width="24" height="24" rx="3" fill="#7a9177"/>
+
+  <!-- SD 字母簡化 -->
+  <text x="16" y="22" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#faf6f1" text-anchor="middle">SD</text>
+
+  <!-- 上升趨勢小圖示 -->
+  <polyline points="8,20 12,17 16,18 20,14 24,13" fill="none" stroke="#c0784c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+  <circle cx="24" cy="13" r="1.5" fill="#c0784c" opacity="0.8"/>
+</svg>

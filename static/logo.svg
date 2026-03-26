@@ -1,0 +1,29 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景（可選，透明背景時移除） -->
+  <!-- <rect width="512" height="512" fill="#faf6f1"/> -->
+
+  <!-- 外層卡片框架 -->
+  <rect x="96" y="96" width="320" height="320" rx="24" fill="none" stroke="#7a9177" stroke-width="8"/>
+
+  <!-- SD 字母組合 -->
+  <g transform="translate(256, 256)">
+    <!-- S 字母 (簡化為曲線) -->
+    <path d="M -60 -80 Q -80 -80 -80 -60 Q -80 -40 -60 -40 L 20 -40 Q 40 -40 40 -20 Q 40 0 20 0 L -40 0"
+          fill="none" stroke="#c0784c" stroke-width="24" stroke-linecap="round"/>
+
+    <!-- D 字母 + 趨勢線概念 -->
+    <path d="M 60 -80 L 60 80"
+          fill="none" stroke="#7a9177" stroke-width="24" stroke-linecap="round"/>
+    <path d="M 60 -80 Q 120 -80 120 0 Q 120 80 60 80"
+          fill="none" stroke="#7a9177" stroke-width="24" stroke-linecap="round"/>
+
+    <!-- 內嵌上升趨勢線 -->
+    <path d="M -40 40 L -10 20 L 20 30 L 50 -10 L 80 -20"
+          fill="none" stroke="#c0784c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+    <circle cx="80" cy="-20" r="6" fill="#c0784c" opacity="0.6"/>
+  </g>
+
+  <!-- 底部裝飾線（數據感） -->
+  <line x1="120" y1="390" x2="392" y2="390" stroke="#7a9177" stroke-width="2" opacity="0.3"/>
+  <line x1="140" y1="398" x2="372" y2="398" stroke="#c0784c" stroke-width="1.5" opacity="0.25"/>
+</svg>
