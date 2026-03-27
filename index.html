@@ -854,6 +854,74 @@
             .footer-divider {
                 display: none;
             }
+
+            /* ===== Browse View Mobile Optimization ===== */
+            .browse-brands {
+                gap: 8px;
+                margin-bottom: 14px;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+                padding-bottom: 6px;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .browse-brands::-webkit-scrollbar {
+                display: none;
+            }
+            .brand-btn {
+                padding: 10px 14px;
+                font-size: .78rem;
+                border-radius: 10px;
+                gap: 6px;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+            .brand-btn .brand-logo {
+                width: 22px;
+                height: 22px;
+            }
+            .browse-categories {
+                gap: 6px;
+                margin-bottom: 12px;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-bottom: 4px;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .browse-categories::-webkit-scrollbar {
+                display: none;
+            }
+            .category-btn {
+                padding: 7px 12px;
+                font-size: .72rem;
+                border-radius: 8px;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+            .browse-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 10px;
+            }
+            .browse-card {
+                padding: 8px;
+                border-radius: 10px;
+            }
+            .browse-card img {
+                height: 170px;
+                border-radius: 6px;
+                margin-bottom: 8px;
+            }
+            .browse-card-title {
+                font-size: .7rem;
+            }
+            .browse-card-number {
+                font-size: .65rem;
+            }
+            .browse-card-price {
+                font-size: .75rem;
+            }
         }
     </style>
 </head>
