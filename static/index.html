@@ -2152,6 +2152,48 @@ function calculateCost() {
     document.getElementById('resTotal').textContent = `$${totalUSD.toFixed(2)} USD ≈ ${totalTWD.toFixed(0)} TWD`;
 }
 
+/**
+ * 🆕 自動填入購入成本試算器
+ * @param {boolean} isBoxProduct - 是否為整盒商品
+ */
+function autoFillCalculator(isBoxProduct) {
+    let priceToFill = 0;
+
+    if (isBoxProduct) {
+        // 整盒商品：使用最低價格
+        if (allHistories.length > 0) {
+            const minPrice = Math.min(...allHistories.map(h => h.price || Infinity));
+            if (minPrice !== Infinity) {
+                priceToFill = minPrice;
+            }
+        }
+    } else {
+        // 單卡商品：優先使用 PSA 10 中位數
+        const psa10Median = calculateMedian('PSA 10');
+        if (psa10Median > 0) {
+            priceToFill = psa10Median;
+        } else {
+            // 如果沒有 PSA 10，使用 PSA 10 最低價
+            const psa10 = rawData.condition_prices.find(c => c.conditionName === 'PSA 10');
+            if (psa10 && psa10.minPriceAmount > 0) {
+                priceToFill = psa10.minPriceAmount;
+            } else {
+                // 如果都沒有，使用所有條件的中位數
+                priceToFill = calculateMedian('All');
+            }
+        }
+    }
+
+    // 填入價格並計算
+    if (priceToFill > 0) {
+        const calcPriceInput = document.getElementById('calcPrice');
+        if (calcPriceInput) {
+            calcPriceInput.value = Math.round(priceToFill);
+            calculateCost();
+        }
+    }
+}
+
 // Init
 (async () => {
     renderWatchlist();
@@ -2293,6 +2335,9 @@ function render() {
             renderROI();
         }
     });
+
+    // 🆕 自動填入購入成本試算器
+    autoFillCalculator(isBoxProduct);
 }
 
 function filterCond(c) {
@@ -2651,6 +2696,41 @@ function showToast(msg) {
 }
 
 // ======= SHARE FUNCTIONALITY =======
+
+/**
+ * 計算特定條件的中位數價格
+ * @param {string} condition - 條件名稱，如 'PSA 10', 'Raw', 'All'
+ * @returns {number} 中位數價格
+ */
+function calculateMedian(condition) {
+    if (!rawData || !rawData.condition_prices) return 0;
+
+    if (condition === 'All') {
+        // 取所有條件價格的中位數
+        const prices = rawData.condition_prices
+            .filter(c => c.minPriceAmount > 0)
+            .map(c => c.minPriceAmount)
+            .sort((a, b) => a - b);
+        return prices.length > 0 ? prices[Math.floor(prices.length / 2)] : 0;
+    }
+
+    // 特定條件：從交易歷史中計算中位數
+    const conditionHistories = allHistories.filter(h => h.condition === condition);
+    if (conditionHistories.length === 0) {
+        // 如果沒有歷史資料，使用最低價
+        const condPrice = rawData.condition_prices.find(c => c.conditionName === condition);
+        return condPrice && condPrice.minPriceAmount > 0 ? condPrice.minPriceAmount : 0;
+    }
+
+    // 計算交易歷史的中位數
+    const prices = conditionHistories
+        .map(h => h.price)
+        .filter(p => p > 0)
+        .sort((a, b) => a - b);
+
+    return prices.length > 0 ? prices[Math.floor(prices.length / 2)] : 0;
+}
+
 async function generateShareImage() {
     if (!rawData) {
         alert('請先分析一張卡片');
