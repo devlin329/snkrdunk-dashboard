@@ -282,6 +282,28 @@ def get_conditions():
     return data if data else {"conditions": []}
 
 
+class BrowseRequest(BaseModel):
+    brand: str  # onepiece 或 pokemon
+    category_id: int
+    page: int = 1
+    per_page: int = 40
+
+
+@app.post("/api/browse")
+async def browse_cards(req: BrowseRequest):
+    """獲取系列卡片列表"""
+    from fastapi.responses import JSONResponse
+
+    data = _api_get(
+        f"/en/v1/trading-cards?brandSlug={req.brand}&categoryId={req.category_id}&page={req.page}&perPage={req.per_page}"
+    )
+
+    if not data:
+        return JSONResponse(content={"tradingCards": []})
+
+    return JSONResponse(content=data)
+
+
 @app.post("/api/telegram")
 async def send_to_telegram(req: TelegramRequest):
     if not TELEGRAM_BOT_TOKEN:

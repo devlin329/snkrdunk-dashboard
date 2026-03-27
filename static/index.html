@@ -88,10 +88,156 @@
 
         /* ======= MAIN CONTENT ======= */
         .main { flex: 1; padding: 28px 20px; display: flex; flex-direction: column; align-items: center; min-width: 0; }
-        .header { text-align: center; margin-bottom: 22px; }
+        .header { text-align: center; margin-bottom: 16px; }
         .header h1 { font-size: 1.6rem; font-weight: 700; color: var(--primary); }
         .header p { color: var(--muted); margin-top: 3px; font-size: .82rem; }
+
+        /* ======= NAVIGATION TABS ======= */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .nav-tab {
+            padding: 10px 24px;
+            border-radius: 10px;
+            border: 2px solid var(--border);
+            background: var(--card);
+            color: var(--text-sec);
+            font-size: .85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .2s;
+        }
+        .nav-tab:hover {
+            border-color: var(--primary-light);
+            color: var(--text);
+            transform: translateY(-1px);
+        }
+        .nav-tab.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
         .container { width: 100%; max-width: 880px; }
+
+        /* ======= BROWSE VIEW ======= */
+        .browse-view {
+            display: none;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .browse-view.active {
+            display: block;
+        }
+        .browse-brands {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .brand-btn {
+            padding: 14px 28px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-size: .9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: .2s;
+        }
+        .brand-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+        .brand-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+        .browse-categories {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .category-btn {
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 2px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-size: .82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .2s;
+        }
+        .category-btn:hover {
+            border-color: var(--sage);
+            transform: translateY(-1px);
+        }
+        .category-btn.active {
+            background: var(--sage);
+            color: #fff;
+            border-color: var(--sage);
+        }
+        .browse-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+        }
+        .browse-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: .2s;
+            box-shadow: 0 1px 4px var(--shadow);
+        }
+        .browse-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+            border-color: var(--primary-light);
+        }
+        .browse-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: var(--bg-warm);
+            margin-bottom: 10px;
+        }
+        .browse-card-title {
+            font-size: .75rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .browse-card-number {
+            font-size: .7rem;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+        .browse-card-price {
+            font-size: .8rem;
+            font-weight: 700;
+            color: var(--sage);
+        }
+        .browse-loader {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+        }
 
         .input-group {
             display: flex;
@@ -517,6 +663,13 @@
             </h1>
             <p>Trading Card Market Analytics</p>
         </div>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchView('analyze')">📊 分析卡片</button>
+            <button class="nav-tab" onclick="switchView('browse')">🗂️ 瀏覽系列</button>
+        </div>
+
         <div class="container">
             <div class="input-group">
                 <div class="input-row">
@@ -631,6 +784,28 @@
             </div>
             <button class="btn btn-tg" id="tgBtn" onclick="sendToTelegram()">🍃 Push to Telegram</button>
         </div>
+
+        <!-- Browse View -->
+        <div class="browse-view" id="browseView">
+            <!-- 品牌選擇 -->
+            <div class="browse-brands">
+                <button class="brand-btn active" onclick="switchBrand('onepiece', this)">🏴‍☠️ ONE PIECE</button>
+                <button class="brand-btn" onclick="switchBrand('pokemon', this)">⚡ Pokémon</button>
+            </div>
+
+            <!-- 類別選擇 -->
+            <div class="browse-categories" id="browseCategories">
+                <button class="category-btn active" data-category="25" onclick="loadBrowseCategory('onepiece', 25, this)">📦 ONE PIECE DAY'24</button>
+                <button class="category-btn" data-category="14" onclick="loadBrowseCategory('onepiece', 14, this)">🎴 Ultra Deck</button>
+            </div>
+
+            <div class="browse-loader" id="browseLoader" style="display:none;">
+                <div class="spinner"></div>
+                <p style="margin-top:12px;">載入中...</p>
+            </div>
+            <div class="browse-grid" id="browseGrid"></div>
+        </div>
+
     </div>
     </div><!-- End page-container -->
 
@@ -712,9 +887,121 @@ let activeCondition = 'All', activeDays = 90, currentUrl = '';
 let chart = null, volChart = null;
 let exchangeRates = { usdTwd: 0, jpyTwd: 0, twdJpy: 0 }; // 匯率資料
 let currentPortfolioKey = null; // 當前查看的投資項目
+let currentView = 'analyze'; // 當前視圖：analyze 或 browse
+let currentBrand = 'onepiece'; // 當前品牌：onepiece 或 pokemon
 
 // ======= PORTFOLIO PRICE CACHE =======
 let portfolioPriceCache = {}; // { "cardId_condition": { price: 123, timestamp: xxx } }
+
+// ======= VIEW SWITCHING =======
+function switchView(view) {
+    currentView = view;
+
+    // 切換 Tab 樣式
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.textContent.includes(view === 'analyze' ? '分析' : '瀏覽'));
+    });
+
+    // 切換內容區域
+    const container = document.querySelector('.container');
+    const browseView = document.getElementById('browseView');
+
+    if (view === 'analyze') {
+        container.style.display = 'block';
+        browseView.classList.remove('active');
+    } else {
+        container.style.display = 'none';
+        browseView.classList.add('active');
+        // 預設載入第一個品牌的第一個類別
+        loadBrowseCategory(currentBrand, 25, document.querySelector('.category-btn'));
+    }
+}
+
+// ======= BRAND SWITCHING =======
+function switchBrand(brand, btnElement) {
+    currentBrand = brand;
+
+    // 更新品牌按鈕樣式
+    document.querySelectorAll('.brand-btn').forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+
+    // 更新類別按鈕內容
+    const categoriesDiv = document.getElementById('browseCategories');
+    if (brand === 'onepiece') {
+        categoriesDiv.innerHTML = `
+            <button class="category-btn active" data-category="25" onclick="loadBrowseCategory('onepiece', 25, this)">📦 ONE PIECE DAY'24</button>
+            <button class="category-btn" data-category="14" onclick="loadBrowseCategory('onepiece', 14, this)">🎴 Ultra Deck</button>
+        `;
+    } else if (brand === 'pokemon') {
+        categoriesDiv.innerHTML = `
+            <button class="category-btn active" data-category="25" onclick="loadBrowseCategory('pokemon', 25, this)">📦 Box & Pack</button>
+            <button class="category-btn" data-category="14" onclick="loadBrowseCategory('pokemon', 14, this)">🎴 Single Card</button>
+        `;
+    }
+
+    // 載入第一個類別
+    loadBrowseCategory(brand, 25, categoriesDiv.querySelector('.category-btn'));
+}
+
+// ======= BROWSE CARDS =======
+async function loadBrowseCategory(brand, categoryId, btnElement) {
+    // 更新按鈕樣式
+    if (btnElement) {
+        document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+        btnElement.classList.add('active');
+    }
+
+    const loader = document.getElementById('browseLoader');
+    const grid = document.getElementById('browseGrid');
+
+    loader.style.display = 'block';
+    grid.innerHTML = '';
+
+    try {
+        const response = await fetch('/api/browse', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ brand: brand, category_id: categoryId, page: 1, per_page: 40 })
+        });
+
+        const data = await response.json();
+        const cards = data.tradingCards || [];
+
+        loader.style.display = 'none';
+
+        if (cards.length === 0) {
+            grid.innerHTML = '<p style="text-align:center;color:var(--muted);padding:40px;">暫無卡片資料</p>';
+            return;
+        }
+
+        cards.forEach(card => {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'browse-card';
+            cardEl.onclick = () => analyzeCardById(card.id);
+
+            cardEl.innerHTML = `
+                <img src="${card.thumbnailUrl}" alt="${card.name}" />
+                <div class="browse-card-number">${card.productNumber || 'N/A'}</div>
+                <div class="browse-card-title">${card.name}</div>
+                <div class="browse-card-price">${card.minPriceFormat}</div>
+            `;
+
+            grid.appendChild(cardEl);
+        });
+    } catch (error) {
+        loader.style.display = 'none';
+        grid.innerHTML = '<p style="text-align:center;color:var(--rust);padding:40px;">載入失敗，請重試</p>';
+        console.error('載入卡片列表失敗:', error);
+    }
+}
+
+// 點擊卡片後分析
+function analyzeCardById(cardId) {
+    const url = `https://snkrdunk.com/en/trading-cards/${cardId}`;
+    document.getElementById('urlInput').value = url;
+    switchView('analyze');
+    setTimeout(() => fetchAll(), 100); // 延遲一下讓 UI 更新
+}
 
 // ======= PORTFOLIO (localStorage) =======
 const PF_KEY = 'snkrdunk_portfolio';
