@@ -38,13 +38,40 @@ class TelegramRequest(BaseModel):
     message: str
 
 
-def _api_get(path: str):
+def _get_cookie():
+    """獲取 SNKRDUNK session cookie"""
+    try:
+        # 訪問首頁獲取 Cookie
+        req = urllib.request.Request(
+            "https://snkrdunk.com/en/",
+            headers={"User-Agent": HEADERS["User-Agent"]}
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            cookies = resp.headers.get('Set-Cookie', '')
+            # 提取 ENSID
+            ensid_match = re.search(r'ENSID=([^;]+)', cookies)
+            if ensid_match:
+                ensid = ensid_match.group(1)
+                print(f"[COOKIE] 成功獲取 ENSID: {ensid[:30]}...")
+                return f"ENSID={ensid}"
+    except Exception as e:
+        print(f"[COOKIE ERROR] 無法獲取 Cookie: {e}")
+    return ""
+
+def _api_get(path: str, use_cookie=False):
     # 添加防快取標頭，確保獲取最新數據
     headers_with_cache = {
         **HEADERS,
         "Cache-Control": "no-cache, no-store, must-revalidate",
         "Pragma": "no-cache",
     }
+
+    # 如果需要 Cookie（用於 sale-prices API）
+    if use_cookie:
+        cookie = _get_cookie()
+        if cookie:
+            headers_with_cache["Cookie"] = cookie
+
     req = urllib.request.Request(f"{BASE}{path}", headers=headers_with_cache)
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
@@ -128,24 +155,46 @@ async def scrape_api(req: ScrapeRequest):
     info = _parse_html(req.url)
     condition_prices = _api_get(f"/en/v1/trading-cards/{card_id}/min-prices-by-conditions")
 
+    # 🎯 使用 sale-prices API 獲取完整歷史圖表數據
+    print(f"[SALE_PRICES] 嘗試獲取完整歷史價格數據...")
+    sale_prices_data = _api_get(f"/en/v1/streetwears/{card_id}/sale-prices?range=all", use_cookie=True)
+
     all_histories = []
-    for page in range(1, 51):  # 增加到 50 頁，最多 5000 筆記錄
-        result = _api_get(f"/en/v1/streetwears/{card_id}/trading-histories?page={page}&perPage=100")
-        if not result:
-            print(f"[HISTORIES] Page {page}: API 返回 None，停止抓取")
-            break
-        histories = result.get("histories", [])
-        if not histories:
-            print(f"[HISTORIES] Page {page}: 無數據，停止抓取")
-            break
 
-        print(f"[HISTORIES] Page {page}: 獲取 {len(histories)} 筆記錄")
-        all_histories.extend(histories)
+    # 方案 A: 如果 sale-prices API 成功，將其轉換為 trading_histories 格式
+    if sale_prices_data and "points" in sale_prices_data:
+        points = sale_prices_data.get("points", [])
+        print(f"[SALE_PRICES] 成功獲取 {len(points)} 筆歷史價格點")
 
-        # 如果這一頁少於 100 筆，表示已經是最後一頁
-        if len(histories) < 100:
-            print(f"[HISTORIES] Page {page}: 數據不足 100 筆，判定為最後一頁")
-            break
+        # 轉換格式：[timestamp_ms, price] -> {tradedAt, price, priceFormat, ...}
+        from datetime import datetime
+        for point in points:
+            timestamp_ms, price = point[0], point[1]
+            timestamp_sec = timestamp_ms / 1000
+            traded_at = datetime.fromtimestamp(timestamp_sec).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+            all_histories.append({
+                "tradedAt": traded_at,
+                "price": price,
+                "priceFormat": f"US ${price}",
+                "condition": "",  # sale-prices 不提供 condition，需要從其他 API 補充
+                "size": "",
+                "iconUrl": ""
+            })
+
+    # 方案 B（降級）: 如果 sale-prices 失敗，使用舊的 trading-histories API
+    if not all_histories:
+        print(f"[SALE_PRICES] 失敗，降級使用 trading-histories API")
+        for page in range(1, 11):
+            result = _api_get(f"/en/v1/streetwears/{card_id}/trading-histories?page={page}&perPage=100")
+            if not result:
+                break
+            histories = result.get("histories", [])
+            if not histories:
+                break
+            all_histories.extend(histories)
+            if len(histories) < 100:
+                break
 
     print(f"[HISTORIES] 總共獲取 {len(all_histories)} 筆交易記錄")
 
