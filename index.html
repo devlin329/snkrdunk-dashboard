@@ -1870,7 +1870,27 @@ function renderTable() {
 function renderChart() {
     if (chart) chart.destroy();
     if (volChart) volChart.destroy();
-    const filtered = getTimeFiltered(getFiltered());
+
+    // 🔍 調試：檢查數據篩選流程
+    console.log('📊 Chart Rendering Debug:');
+    console.log('  Total histories:', allHistories.length);
+    console.log('  Active condition:', activeCondition);
+    console.log('  Active days:', activeDays);
+
+    const conditionFiltered = getFiltered();
+    console.log('  After condition filter:', conditionFiltered.length);
+
+    const filtered = getTimeFiltered(conditionFiltered);
+    console.log('  After time filter:', filtered.length);
+
+    if (filtered.length > 0) {
+        const dates = filtered.map(h => h.tradedAt);
+        console.log('  Date range:', {
+            earliest: dates[dates.length - 1],
+            latest: dates[0]
+        });
+    }
+
     const sorted = [...filtered].reverse();
     const statsEl = document.getElementById('chartStats');
     const noteEl = document.getElementById('outlierNote');
