@@ -802,8 +802,8 @@
 
             <!-- 類別選擇 -->
             <div class="browse-categories" id="browseCategories">
-                <button class="category-btn active" data-category="25" onclick="loadBrowseCategory('onepiece', 25, this)">📦 ONE PIECE DAY'24</button>
-                <button class="category-btn" data-category="14" onclick="loadBrowseCategory('onepiece', 14, this)">🎴 Ultra Deck</button>
+                <button class="category-btn active" data-category="14" onclick="loadBrowseCategory('onepiece', 14, this)">📦 Box & Pack</button>
+                <button class="category-btn" data-category="25" onclick="loadBrowseCategory('onepiece', 25, this)">🎴 Single Card</button>
             </div>
 
             <div class="browse-loader" id="browseLoader" style="display:none;">
@@ -921,8 +921,8 @@ function switchView(view) {
     } else {
         container.style.display = 'none';
         browseView.classList.add('active');
-        // 預設載入第一個品牌的第一個類別
-        loadBrowseCategory(currentBrand, 25, document.querySelector('.category-btn'));
+        // 預設載入第一個品牌的第一個類別（Box & Pack = 14）
+        loadBrowseCategory(currentBrand, 14, document.querySelector('.category-btn'));
     }
 }
 
@@ -950,19 +950,19 @@ function switchBrand(brand, btnElement) {
     const categoriesDiv = document.getElementById('browseCategories');
     if (brand === 'onepiece') {
         categoriesDiv.innerHTML = `
-            <button class="category-btn active" data-category="25" onclick="loadBrowseCategory('onepiece', 25, this)">📦 ONE PIECE DAY'24</button>
-            <button class="category-btn" data-category="14" onclick="loadBrowseCategory('onepiece', 14, this)">🎴 Ultra Deck</button>
+            <button class="category-btn active" data-category="14" onclick="loadBrowseCategory('onepiece', 14, this)">📦 Box & Pack</button>
+            <button class="category-btn" data-category="25" onclick="loadBrowseCategory('onepiece', 25, this)">🎴 Single Card</button>
         `;
     } else if (brand === 'pokemon') {
         categoriesDiv.innerHTML = `
-            <button class="category-btn active" data-category="25" onclick="loadBrowseCategory('pokemon', 25, this)">📦 Box & Pack</button>
-            <button class="category-btn" data-category="14" onclick="loadBrowseCategory('pokemon', 14, this)">🎴 Single Card</button>
+            <button class="category-btn active" data-category="14" onclick="loadBrowseCategory('pokemon', 14, this)">📦 Box & Pack</button>
+            <button class="category-btn" data-category="25" onclick="loadBrowseCategory('pokemon', 25, this)">🎴 Single Card</button>
         `;
     }
 
-    // 載入第一個類別
-    currentCategory = 25;
-    loadBrowseCategory(brand, 25, categoriesDiv.querySelector('.category-btn'));
+    // 載入第一個類別（Box & Pack = categoryId 14）
+    currentCategory = 14;
+    loadBrowseCategory(brand, 14, categoriesDiv.querySelector('.category-btn'));
 }
 
 // ======= BROWSE CARDS =======
