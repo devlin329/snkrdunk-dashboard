@@ -203,6 +203,38 @@ async def send_to_telegram(req: TelegramRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/image-proxy")
+async def image_proxy(url: str = Query(...)):
+    """代理外部圖片，解決 html2canvas 跨域 tainted canvas 問題"""
+    from fastapi.responses import Response
+
+    allowed_hosts = ["snkrdunk.com", "cdn.snkrdunk.com", "img.snkrdunk.com",
+                     "d1rg1dqjmqolwn.cloudfront.net", "static.mercdn.net"]
+    try:
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        if not any(parsed.hostname and parsed.hostname.endswith(h) for h in allowed_hosts):
+            raise HTTPException(status_code=403, detail="Domain not allowed")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid URL")
+
+    req = urllib.request.Request(url, headers={
+        "User-Agent": HEADERS["User-Agent"],
+        "Referer": "https://snkrdunk.com/",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            content_type = resp.headers.get("Content-Type", "image/jpeg")
+            data = resp.read()
+            return Response(
+                content=data,
+                media_type=content_type,
+                headers={"Cache-Control": "public, max-age=86400"}
+            )
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to fetch image: {e}")
+
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")

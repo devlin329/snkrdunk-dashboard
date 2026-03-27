@@ -2801,32 +2801,27 @@ async function populateShareCard() {
     const isBoxProduct = (rawData.condition_prices || []).length === 0 &&
                          allHistories.some(h => h.size && h.size.includes('box'));
 
-    // ── 2. 用 Canvas 繪製卡片圖（解決 html2canvas 跨域問題）──
+    // ── 2. 用 Canvas 繪製卡片圖（透過後端 proxy 取得同源圖片，避免 tainted canvas）──
     const shareCanvas = document.getElementById('shareCardImg');
     const sCtx = shareCanvas.getContext('2d');
 
-    // 直接複用 dashboard 已載入好的 <img id="heroImg">，避免重新跨域請求
-    const heroImg = document.getElementById('heroImg');
-    const drawCardImage = () => {
+    const drawToCanvas = (img) => {
         sCtx.clearRect(0, 0, shareCanvas.width, shareCanvas.height);
-        if (heroImg && heroImg.src && heroImg.naturalWidth > 0) {
-            // 計算等比例縮放，填滿 200×280
+        if (img && img.naturalWidth > 0) {
             const sw = shareCanvas.width, sh = shareCanvas.height;
-            const iw = heroImg.naturalWidth, ih = heroImg.naturalHeight;
+            const iw = img.naturalWidth, ih = img.naturalHeight;
             const scale = Math.max(sw / iw, sh / ih);
             const drawW = iw * scale, drawH = ih * scale;
             const ox = (sw - drawW) / 2, oy = (sh - drawH) / 2;
-            // 圓角裁切
             sCtx.save();
             sCtx.beginPath();
             sCtx.roundRect(0, 0, sw, sh, 16);
             sCtx.clip();
             sCtx.fillStyle = '#f5efe7';
             sCtx.fillRect(0, 0, sw, sh);
-            sCtx.drawImage(heroImg, ox, oy, drawW, drawH);
+            sCtx.drawImage(img, ox, oy, drawW, drawH);
             sCtx.restore();
         } else {
-            // 無圖時畫佔位背景
             sCtx.fillStyle = '#f5efe7';
             sCtx.fillRect(0, 0, shareCanvas.width, shareCanvas.height);
             sCtx.fillStyle = '#b0a396';
@@ -2836,17 +2831,33 @@ async function populateShareCard() {
         }
     };
 
-    if (heroImg && heroImg.naturalWidth > 0) {
-        drawCardImage();
-    } else if (heroImg && info.thumbnail_url) {
-        // heroImg 還沒載入完畢時等它
-        await new Promise(resolve => {
-            heroImg.onload = () => { drawCardImage(); resolve(); };
-            heroImg.onerror = () => { drawCardImage(); resolve(); };
-            setTimeout(() => { drawCardImage(); resolve(); }, 3000);
-        });
+    // 用後端 proxy 獲取同源圖片 → blob URL → 新建 Image 繪製（不會 taint canvas）
+    if (info.thumbnail_url) {
+        try {
+            const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(info.thumbnail_url)}`;
+            const imgResp = await fetch(proxyUrl);
+            if (imgResp.ok) {
+                const blob = await imgResp.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const proxyImg = new Image();
+                await new Promise((resolve) => {
+                    proxyImg.onload = resolve;
+                    proxyImg.onerror = resolve;
+                    proxyImg.src = blobUrl;
+                    setTimeout(resolve, 5000);
+                });
+                drawToCanvas(proxyImg);
+                URL.revokeObjectURL(blobUrl);
+            } else {
+                console.warn('Image proxy failed, drawing placeholder');
+                drawToCanvas(null);
+            }
+        } catch (e) {
+            console.warn('Image proxy error:', e);
+            drawToCanvas(null);
+        }
     } else {
-        drawCardImage();
+        drawToCanvas(null);
     }
 
     // ── 3. 基本資訊（直接抄 dashboard 已有的值）──
