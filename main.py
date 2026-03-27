@@ -191,6 +191,71 @@ def get_conditions():
     return data if data else {"conditions": []}
 
 
+class BrowseRequest(BaseModel):
+    brand: str  # onepiece 或 pokemon
+    category_id: int
+    page: int = 1
+    per_page: int = 40
+    sort: str = "featured"  # featured, price_asc, price_desc
+
+
+@app.post("/api/browse")
+async def browse_cards(req_body: BrowseRequest):
+    """獲取系列卡片列表"""
+    from fastapi.responses import JSONResponse
+
+    url = f"/en/v1/trading-cards?brandId={req_body.brand}&categoryId={req_body.category_id}&page={req_body.page}&perPage={req_body.per_page}"
+
+    if req_body.sort == "featured":
+        url += "&order=popular"
+    elif req_body.sort == "price_asc":
+        url += "&order=price_asc"
+    elif req_body.sort == "price_desc":
+        url += "&order=price_desc"
+
+    print(f"[BROWSE] API URL: {url}")
+    data = _api_get(url)
+
+    if not data:
+        return JSONResponse(content={"tradingCards": []})
+
+    return JSONResponse(content=data)
+
+
+class SearchRequest(BaseModel):
+    keyword: str
+    page: int = 1
+    per_page: int = 30
+    sort: str = "featured"  # featured, price_asc, price_desc
+
+
+@app.post("/api/search")
+async def search_cards(req_body: SearchRequest):
+    """關鍵字搜尋 trading cards"""
+    from fastapi.responses import JSONResponse
+    from urllib.parse import quote
+
+    url = f"/en/v1/search?keyword={quote(req_body.keyword)}&page={req_body.page}&perPage={req_body.per_page}"
+
+    if req_body.sort == "price_asc":
+        url += "&order=price_asc"
+    elif req_body.sort == "price_desc":
+        url += "&order=price_desc"
+    else:
+        url += "&order=popular"
+
+    print(f"[SEARCH] API URL: {url}")
+    data = _api_get(url)
+
+    if not data:
+        return JSONResponse(content={"tradingCards": []})
+
+    streetwears = data.get("streetwears", [])
+    trading_cards = [item for item in streetwears if item.get("isTradingCard")]
+
+    return JSONResponse(content={"tradingCards": trading_cards})
+
+
 @app.post("/api/telegram")
 async def send_to_telegram(req: TelegramRequest):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"

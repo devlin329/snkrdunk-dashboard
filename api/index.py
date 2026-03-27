@@ -315,6 +315,43 @@ async def browse_cards(req: BrowseRequest):
     return JSONResponse(content=data)
 
 
+class SearchRequest(BaseModel):
+    keyword: str
+    page: int = 1
+    per_page: int = 30
+    sort: str = "featured"  # featured, price_asc, price_desc
+
+
+@app.post("/api/search")
+async def search_cards(req: SearchRequest):
+    """關鍵字搜尋 trading cards"""
+    from fastapi.responses import JSONResponse
+    from urllib.parse import quote
+
+    url = f"/en/v1/search?keyword={quote(req.keyword)}&page={req.page}&perPage={req.per_page}"
+
+    # 排序參數
+    if req.sort == "price_asc":
+        url += "&order=price_asc"
+    elif req.sort == "price_desc":
+        url += "&order=price_desc"
+    else:
+        url += "&order=popular"
+
+    print(f"[SEARCH] API URL: {url}")
+    data = _api_get(url)
+
+    if not data:
+        return JSONResponse(content={"tradingCards": []})
+
+    # 搜尋 API 回傳結構不同：trading cards 在 streetwears 裡
+    # 轉換成跟 /api/browse 一樣的格式，方便前端統一處理
+    streetwears = data.get("streetwears", [])
+    trading_cards = [item for item in streetwears if item.get("isTradingCard")]
+
+    return JSONResponse(content={"tradingCards": trading_cards})
+
+
 @app.post("/api/telegram")
 async def send_to_telegram(req: TelegramRequest):
     if not TELEGRAM_BOT_TOKEN:

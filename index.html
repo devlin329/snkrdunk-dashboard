@@ -998,6 +998,7 @@
             <div class="browse-brands">
                 <button class="brand-btn active" onclick="switchBrand('onepiece', this)">🏴‍☠️ ONE PIECE</button>
                 <button class="brand-btn" onclick="switchBrand('pokemon', this)">⚡ Pokémon</button>
+                <button class="brand-btn" onclick="switchBrand('luffy', this)">👒 Luffy SEC</button>
             </div>
 
             <!-- 排序選項 -->
@@ -1189,8 +1190,13 @@ function switchView(view) {
     } else {
         container.style.display = 'none';
         browseView.classList.add('active');
-        // 預設載入第一個品牌的第一個類別（Box & Pack = 14）
-        loadBrowseCategory(currentBrand, 14, document.querySelector('.category-btn'));
+        // 根據品牌類型決定載入方式
+        const KEYWORD_BRANDS = { luffy: 'Monkey.D.Luffy SEC' };
+        if (KEYWORD_BRANDS[currentBrand]) {
+            loadSearchResults(KEYWORD_BRANDS[currentBrand]);
+        } else {
+            loadBrowseCategory(currentBrand, 14, document.querySelector('.category-btn'));
+        }
     }
 }
 
@@ -1202,8 +1208,13 @@ function setSortOrder(sort, btnElement) {
     btnElement.parentElement.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
     btnElement.classList.add('active');
 
-    // 重新載入當前類別
-    loadBrowseCategory(currentBrand, currentCategory);
+    // 根據品牌類型決定重新載入方式
+    const KEYWORD_BRANDS = { luffy: 'Monkey.D.Luffy SEC' };
+    if (KEYWORD_BRANDS[currentBrand]) {
+        loadSearchResults(KEYWORD_BRANDS[currentBrand]);
+    } else {
+        loadBrowseCategory(currentBrand, currentCategory);
+    }
 }
 
 // ======= BRAND SWITCHING =======
@@ -1216,21 +1227,87 @@ function switchBrand(brand, btnElement) {
 
     // 更新類別按鈕內容
     const categoriesDiv = document.getElementById('browseCategories');
-    if (brand === 'onepiece') {
-        categoriesDiv.innerHTML = `
-            <button class="category-btn active" data-category="14" onclick="loadBrowseCategory('onepiece', 14, this)">📦 Box & Pack</button>
-            <button class="category-btn" data-category="25" onclick="loadBrowseCategory('onepiece', 25, this)">🎴 Single Card</button>
-        `;
-    } else if (brand === 'pokemon') {
-        categoriesDiv.innerHTML = `
-            <button class="category-btn active" data-category="14" onclick="loadBrowseCategory('pokemon', 14, this)">📦 Box & Pack</button>
-            <button class="category-btn" data-category="25" onclick="loadBrowseCategory('pokemon', 25, this)">🎴 Single Card</button>
-        `;
-    }
 
-    // 載入第一個類別（Box & Pack = categoryId 14）
-    currentCategory = 14;
-    loadBrowseCategory(brand, 14, categoriesDiv.querySelector('.category-btn'));
+    // 品牌設定：keyword 類型不顯示類別按鈕，直接搜尋
+    const BRAND_CONFIG = {
+        onepiece: { type: 'brandId', categories: [
+            { id: 14, label: '📦 Box & Pack' },
+            { id: 25, label: '🎴 Single Card' }
+        ]},
+        pokemon: { type: 'brandId', categories: [
+            { id: 14, label: '📦 Box & Pack' },
+            { id: 25, label: '🎴 Single Card' }
+        ]},
+        luffy: { type: 'keyword', keyword: 'Monkey.D.Luffy SEC' }
+    };
+
+    const config = BRAND_CONFIG[brand];
+    if (!config) return;
+
+    if (config.type === 'keyword') {
+        // keyword 搜尋模式：隱藏類別按鈕，直接搜尋
+        categoriesDiv.innerHTML = '';
+        currentCategory = 0;
+        loadSearchResults(config.keyword);
+    } else {
+        // brandId 瀏覽模式：顯示類別按鈕
+        categoriesDiv.innerHTML = config.categories.map((cat, i) =>
+            `<button class="category-btn ${i === 0 ? 'active' : ''}" data-category="${cat.id}" onclick="loadBrowseCategory('${brand}', ${cat.id}, this)">${cat.label}</button>`
+        ).join('');
+        currentCategory = config.categories[0].id;
+        loadBrowseCategory(brand, currentCategory, categoriesDiv.querySelector('.category-btn'));
+    }
+}
+
+// ======= KEYWORD SEARCH =======
+async function loadSearchResults(keyword) {
+    const loader = document.getElementById('browseLoader');
+    const grid = document.getElementById('browseGrid');
+
+    loader.style.display = 'block';
+    grid.innerHTML = '';
+
+    try {
+        const response = await fetch('/api/search', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                keyword: keyword,
+                page: 1,
+                per_page: 30,
+                sort: currentSort
+            })
+        });
+
+        const data = await response.json();
+        const cards = data.tradingCards || [];
+
+        loader.style.display = 'none';
+
+        if (cards.length === 0) {
+            grid.innerHTML = '<p style="text-align:center;color:var(--muted);padding:40px;">暫無搜尋結果</p>';
+            return;
+        }
+
+        cards.forEach(card => {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'browse-card';
+            cardEl.onclick = () => analyzeCardById(card.id);
+
+            cardEl.innerHTML = `
+                <img src="${card.thumbnailUrl}" alt="${card.name}" />
+                <div class="browse-card-number">${card.productNumber || 'N/A'}</div>
+                <div class="browse-card-title">${card.name}</div>
+                <div class="browse-card-price">${card.minPriceFormat}</div>
+            `;
+
+            grid.appendChild(cardEl);
+        });
+    } catch (error) {
+        loader.style.display = 'none';
+        grid.innerHTML = '<p style="text-align:center;color:var(--rust);padding:40px;">搜尋失敗，請重試</p>';
+        console.error('搜尋失敗:', error);
+    }
 }
 
 // ======= BROWSE CARDS =======
