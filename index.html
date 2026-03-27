@@ -1159,7 +1159,7 @@
 <script>
 let rawData = null, allHistories = [], conditions = [];
 let activeCondition = 'All', activeDays = 90, currentUrl = '';
-let chart = null, volChart = null;
+let chart = null, volChart = null, shareChartInstance = null;
 let exchangeRates = { usdTwd: 0, jpyTwd: 0, twdJpy: 0 }; // 匯率資料
 let currentPortfolioKey = null; // 當前查看的投資項目
 let currentView = 'analyze'; // 當前視圖：analyze 或 browse
@@ -2965,8 +2965,9 @@ async function populateShareCard() {
 }
 
 function generateInvestmentAdvice() {
-    // 計算 7 天數據
-    const days7 = allHistories.filter(h => {
+    // 使用與 renderChart() 相同的條件篩選邏輯
+    const conditionFiltered = getFiltered();
+    const days7 = conditionFiltered.filter(h => {
         const t = new Date(h.tradedAt);
         return (Date.now() - t.getTime()) <= 7 * 86400000;
     });
@@ -2975,13 +2976,21 @@ function generateInvestmentAdvice() {
         return '目前歷史數據不足，建議觀察市場趨勢後再做決策。';
     }
 
-    const prices = days7.map(h => h.price);
-    const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
+    // 清洗捆綁交易 + MA 平滑，與主圖表一致
+    const sorted = [...days7].sort((a, b) => new Date(a.tradedAt) - new Date(b.tradedAt));
+    const rawPrices = sorted.map(h => h.price);
+    const conditionBaseline = getConditionBaseline(activeCondition);
+    const cleanedPrices = cleanForTrend(rawPrices, sorted, conditionBaseline);
+    const winSize = Math.max(3, Math.min(15, Math.floor(cleanedPrices.length / 8)));
+    const maPrices = calcMA(cleanedPrices, winSize);
+
+    const avgPrice = maPrices.reduce((a, b) => a + b, 0) / maPrices.length;
+    const minPrice = Math.min(...maPrices);
+    const maxPrice = Math.max(...maPrices);
     const volatility = ((maxPrice - minPrice) / avgPrice * 100).toFixed(1);
 
-    let advice = `根據過去7天的${days7.length}筆成交數據分析，`;
+    const condLabel = activeCondition === 'All' ? '' : ` (${activeCondition})`;
+    let advice = `根據過去7天的${days7.length}筆${condLabel}成交數據分析，`;
 
     if (volatility < 10) {
         advice += `該卡片價格走勢穩定（波動率 ${volatility}%），市場流通性良好。建議長期持有以獲得穩定回報。`;
@@ -2998,13 +3007,22 @@ async function renderShareChart() {
     const canvas = document.getElementById('shareChart');
     const ctx = canvas.getContext('2d');
 
-    // 獲取 7 天數據
-    const days7 = allHistories.filter(h => {
-        const t = new Date(h.tradedAt);
-        return (Date.now() - t.getTime()) <= 7 * 86400000;
-    }).sort((a, b) => new Date(a.tradedAt) - new Date(b.tradedAt));
+    // 銷毀舊的 Chart 實例（避免多次開啟分享卡時堆疊）
+    if (shareChartInstance) {
+        shareChartInstance.destroy();
+        shareChartInstance = null;
+    }
+
+    // ── 與 renderChart() 完全相同的篩選流程 ──
+    // 1. 按 activeCondition 篩選（PSA 10 / box size / All）
+    const conditionFiltered = getFiltered();
+
+    // 2. 7 天時間篩選
+    const cutoff = Date.now() - 7 * 86400000;
+    const days7 = conditionFiltered.filter(h => new Date(h.tradedAt).getTime() >= cutoff);
 
     if (days7.length === 0) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.font = '18px DM Sans';
         ctx.fillStyle = '#b0a396';
         ctx.textAlign = 'center';
@@ -3012,24 +3030,66 @@ async function renderShareChart() {
         return;
     }
 
-    // 使用 Chart.js 生成圖表
-    new Chart(ctx, {
+    // 3. 按時間排序（舊→新）
+    const sorted = [...days7].sort((a, b) => new Date(a.tradedAt) - new Date(b.tradedAt));
+    const rawPrices = sorted.map(h => h.price);
+    const dateLabels = sorted.map(h => {
+        const d = new Date(h.tradedAt);
+        return `${d.getMonth()+1}/${d.getDate()}`;
+    });
+
+    // 4. cleanForTrend — 修正捆綁交易離群值（與主圖表一致）
+    const conditionBaseline = getConditionBaseline(activeCondition);
+    const cleanedPrices = cleanForTrend(rawPrices, sorted, conditionBaseline);
+
+    // 5. calcMA — 移動中位數平滑趨勢線（與主圖表一致）
+    const winSize = Math.max(3, Math.min(15, Math.floor(cleanedPrices.length / 8)));
+    const maPrices = calcMA(cleanedPrices, winSize);
+
+    // 6. 計算趨勢方向（用於顏色）
+    const latest = maPrices[maPrices.length - 1], first = maPrices[0];
+    const change = first > 0 ? ((latest - first) / first * 100) : 0;
+    const isUp = change >= 0;
+    const lineColor = isUp ? '#7a9177' : '#b85c3a';
+
+    // 7. 漸層背景
+    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    if (isUp) {
+        grad.addColorStop(0, 'rgba(122,145,119,0.25)');
+        grad.addColorStop(0.5, 'rgba(122,145,119,0.05)');
+        grad.addColorStop(1, 'rgba(122,145,119,0)');
+    } else {
+        grad.addColorStop(0, 'rgba(184,92,58,0.20)');
+        grad.addColorStop(0.5, 'rgba(184,92,58,0.05)');
+        grad.addColorStop(1, 'rgba(184,92,58,0)');
+    }
+
+    // 8. 更新圖表區段標題（動態反映條件）
+    const condLabel = activeCondition === 'All' ? '' : ` ${activeCondition}`;
+    const chartTitleEl = document.querySelector('.share-chart-section .share-section-title');
+    if (chartTitleEl) {
+        const changeStr = change >= 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`;
+        chartTitleEl.textContent = `📈${condLabel} 7天價格趨勢 (${changeStr})`;
+    }
+
+    // 9. 繪製 Chart.js 圖表
+    shareChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: days7.map(h => {
-                const d = new Date(h.tradedAt);
-                return `${d.getMonth()+1}/${d.getDate()}`;
-            }),
+            labels: dateLabels,
             datasets: [{
-                label: 'Price',
-                data: days7.map(h => h.price),
-                borderColor: '#7a9177',
-                backgroundColor: 'rgba(122,145,119,0.1)',
-                borderWidth: 3,
+                label: 'Price Trend',
+                data: maPrices,
+                borderColor: lineColor,
+                backgroundColor: grad,
+                borderWidth: 2.5,
                 pointRadius: 0,
-                pointHoverRadius: 6,
-                tension: 0.3,
-                fill: true
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: lineColor,
+                pointHoverBorderWidth: 2,
+                fill: true,
+                tension: 0.4
             }]
         },
         options: {
@@ -3038,12 +3098,24 @@ async function renderShareChart() {
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: 'rgba(61,50,41,0.9)',
-                    padding: 12,
-                    titleFont: { size: 14, weight: 'bold' },
-                    bodyFont: { size: 13 },
+                    backgroundColor: 'rgba(61,50,41,0.92)',
+                    titleColor: '#faf6f1',
+                    bodyColor: '#faf6f1',
+                    borderColor: 'rgba(192,120,76,0.15)',
+                    borderWidth: 1,
+                    padding: 10,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    titleFont: { size: 11 },
+                    bodyFont: { size: 13, weight: 700 },
                     callbacks: {
-                        label: (context) => `價格: $${context.parsed.y}`
+                        title: (items) => {
+                            const h = sorted[items[0].dataIndex];
+                            const d = new Date(h.tradedAt);
+                            return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+                        },
+                        label: (item) => `趨勢: $${item.raw.toLocaleString()}`,
+                        afterLabel: (item) => `成交價: $${rawPrices[item.dataIndex].toLocaleString()}`
                     }
                 }
             },
@@ -3053,7 +3125,8 @@ async function renderShareChart() {
                         color: '#7a6b5d',
                         font: { size: 11 },
                         maxRotation: 45,
-                        minRotation: 45
+                        minRotation: 45,
+                        maxTicksLimit: 10
                     },
                     grid: { display: false }
                 },
