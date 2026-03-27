@@ -129,16 +129,25 @@ async def scrape_api(req: ScrapeRequest):
     condition_prices = _api_get(f"/en/v1/trading-cards/{card_id}/min-prices-by-conditions")
 
     all_histories = []
-    for page in range(1, 11):
+    for page in range(1, 51):  # 增加到 50 頁，最多 5000 筆記錄
         result = _api_get(f"/en/v1/streetwears/{card_id}/trading-histories?page={page}&perPage=100")
         if not result:
+            print(f"[HISTORIES] Page {page}: API 返回 None，停止抓取")
             break
         histories = result.get("histories", [])
         if not histories:
+            print(f"[HISTORIES] Page {page}: 無數據，停止抓取")
             break
+
+        print(f"[HISTORIES] Page {page}: 獲取 {len(histories)} 筆記錄")
         all_histories.extend(histories)
+
+        # 如果這一頁少於 100 筆，表示已經是最後一頁
         if len(histories) < 100:
+            print(f"[HISTORIES] Page {page}: 數據不足 100 筆，判定為最後一頁")
             break
+
+    print(f"[HISTORIES] 總共獲取 {len(all_histories)} 筆交易記錄")
 
     # 調試：記錄前3筆交易的完整原始數據
     if all_histories:
