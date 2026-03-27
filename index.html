@@ -569,12 +569,14 @@
             padding-bottom: 32px;
             border-bottom: 2px solid rgba(139,111,78,0.12);
         }
-        .share-header img {
+        .share-header img,
+        .share-header canvas {
             width: 200px;
             height: 280px;
             object-fit: cover;
             border-radius: 16px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            flex-shrink: 0;
         }
         .share-info {
             flex: 1;
@@ -1037,20 +1039,20 @@
         <div class="share-container">
             <!-- Card Header with Image and Basic Info -->
             <div class="share-header">
-                <img id="shareCardImg" src="" alt="Card">
+                <canvas id="shareCardImg" width="200" height="280" style="border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.1);flex-shrink:0;"></canvas>
                 <div class="share-info">
                     <div class="share-title" id="shareCardTitle">-</div>
                     <div class="share-subtitle" id="shareCardSubtitle">-</div>
                     <div class="share-number" id="shareCardNumber">-</div>
 
-                    <!-- Price Grid -->
-                    <div class="share-price-grid">
+                     <!-- Price Grid -->
+                    <div class="share-price-grid" id="sharePriceGrid">
                         <div class="share-price-item">
-                            <div class="share-price-label">💎 PSA 10 中位數</div>
+                            <div class="share-price-label" id="sharePrice1Label">💎 PSA 10 最低價</div>
                             <div class="share-price-value" id="sharePSA10">-</div>
                         </div>
                         <div class="share-price-item">
-                            <div class="share-price-label">📦 Raw 最低價</div>
+                            <div class="share-price-label" id="sharePrice2Label">📦 Raw 最低價</div>
                             <div class="share-price-value" id="shareRawPrice">-</div>
                         </div>
                     </div>
@@ -2154,31 +2156,44 @@ function calculateCost() {
 
 /**
  * 🆕 自動填入購入成本試算器
+ * 直接從 rawData（與 condGrid 相同來源）取最有代表性的價格填入
  * @param {boolean} isBoxProduct - 是否為整盒商品
  */
 function autoFillCalculator(isBoxProduct) {
     let priceToFill = 0;
 
     if (isBoxProduct) {
-        // 整盒商品：使用最低價格
-        if (allHistories.length > 0) {
-            const minPrice = Math.min(...allHistories.map(h => h.price || Infinity));
-            if (minPrice !== Infinity) {
-                priceToFill = minPrice;
-            }
+        // 整盒商品：取 allHistories 最低成交價（condGrid 顯示的同一個值）
+        const validPrices = allHistories.map(h => h.price).filter(p => p > 0);
+        if (validPrices.length > 0) {
+            priceToFill = Math.min(...validPrices);
         }
     } else {
-        // 單卡商品：優先使用 PSA 10 最低價
-        const psa10 = rawData.condition_prices.find(c => c.conditionName === 'PSA 10');
-        if (psa10 && psa10.minPriceAmount > 0) {
-            priceToFill = psa10.minPriceAmount;
-        } else {
-            // 如果沒有 PSA 10，使用所有條件的最低價中位數
-            priceToFill = calculateMedian('All');
+        // 單卡商品：conditionPrices 直接取 PSA 10 最低價
+        const condPrices = rawData.condition_prices || [];
+
+        // 優先 PSA 10
+        const psa10 = condPrices.find(c => c.conditionName === 'PSA 10');
+        if (psa10) {
+            priceToFill = psa10.minPriceAmount || psa10.minPrice || 0;
+        }
+
+        // PSA 10 無價格則取所有條件中最低的有效價格
+        if (!priceToFill) {
+            const minValid = condPrices
+                .map(c => c.minPriceAmount || c.minPrice || 0)
+                .filter(p => p > 0);
+            if (minValid.length > 0) {
+                priceToFill = Math.min(...minValid);
+            }
+        }
+
+        // 最後 fallback：用 info.used_min_price_amount
+        if (!priceToFill && rawData.info && rawData.info.used_min_price_amount > 0) {
+            priceToFill = rawData.info.used_min_price_amount;
         }
     }
 
-    // 填入價格並計算
     if (priceToFill > 0) {
         const calcPriceInput = document.getElementById('calcPrice');
         if (calcPriceInput) {
@@ -2746,13 +2761,16 @@ async function generateShareImage() {
         await new Promise(resolve => setTimeout(resolve, 500));
 
         // 4. 使用 html2canvas 生成圖片
+        // 卡片圖片已用 canvas 繪製（無跨域問題），其他外部資源不等待
         const shareCard = document.getElementById('shareCard');
         const canvas = await html2canvas(shareCard, {
             scale: 2,
             backgroundColor: '#faf6f1',
             logging: false,
             useCORS: true,
-            allowTaint: true
+            allowTaint: true,
+            imageTimeout: 0,
+            foreignObjectRendering: false
         });
 
         // 5. 下載圖片
@@ -2779,46 +2797,129 @@ async function generateShareImage() {
 async function populateShareCard() {
     const info = rawData.info;
 
-    // 基本資料 - 設定圖片並等待載入
-    const shareImg = document.getElementById('shareCardImg');
-    shareImg.src = info.thumbnail_url;
+    // ── 1. 偵測是否整盒商品（與 render() 邏輯一致）──
+    const isBoxProduct = (rawData.condition_prices || []).length === 0 &&
+                         allHistories.some(h => h.size && h.size.includes('box'));
 
-    // 等待圖片載入完成
-    await new Promise((resolve, reject) => {
-        if (shareImg.complete) {
-            resolve();
+    // ── 2. 用 Canvas 繪製卡片圖（解決 html2canvas 跨域問題）──
+    const shareCanvas = document.getElementById('shareCardImg');
+    const sCtx = shareCanvas.getContext('2d');
+
+    // 直接複用 dashboard 已載入好的 <img id="heroImg">，避免重新跨域請求
+    const heroImg = document.getElementById('heroImg');
+    const drawCardImage = () => {
+        sCtx.clearRect(0, 0, shareCanvas.width, shareCanvas.height);
+        if (heroImg && heroImg.src && heroImg.naturalWidth > 0) {
+            // 計算等比例縮放，填滿 200×280
+            const sw = shareCanvas.width, sh = shareCanvas.height;
+            const iw = heroImg.naturalWidth, ih = heroImg.naturalHeight;
+            const scale = Math.max(sw / iw, sh / ih);
+            const drawW = iw * scale, drawH = ih * scale;
+            const ox = (sw - drawW) / 2, oy = (sh - drawH) / 2;
+            // 圓角裁切
+            sCtx.save();
+            sCtx.beginPath();
+            sCtx.roundRect(0, 0, sw, sh, 16);
+            sCtx.clip();
+            sCtx.fillStyle = '#f5efe7';
+            sCtx.fillRect(0, 0, sw, sh);
+            sCtx.drawImage(heroImg, ox, oy, drawW, drawH);
+            sCtx.restore();
         } else {
-            shareImg.onload = resolve;
-            shareImg.onerror = () => {
-                console.warn('圖片載入失敗，使用預設圖片');
-                resolve(); // 即使失敗也繼續
-            };
-            // 設定 3 秒超時
-            setTimeout(resolve, 3000);
+            // 無圖時畫佔位背景
+            sCtx.fillStyle = '#f5efe7';
+            sCtx.fillRect(0, 0, shareCanvas.width, shareCanvas.height);
+            sCtx.fillStyle = '#b0a396';
+            sCtx.font = '14px DM Sans, sans-serif';
+            sCtx.textAlign = 'center';
+            sCtx.fillText('No Image', shareCanvas.width / 2, shareCanvas.height / 2);
         }
-    });
+    };
 
-    document.getElementById('shareCardTitle').textContent = info.title;
-    document.getElementById('shareCardSubtitle').textContent = info.subtitle || '';
-    document.getElementById('shareCardNumber').textContent = info.product_number ? `#${info.product_number}` : '';
+    if (heroImg && heroImg.naturalWidth > 0) {
+        drawCardImage();
+    } else if (heroImg && info.thumbnail_url) {
+        // heroImg 還沒載入完畢時等它
+        await new Promise(resolve => {
+            heroImg.onload = () => { drawCardImage(); resolve(); };
+            heroImg.onerror = () => { drawCardImage(); resolve(); };
+            setTimeout(() => { drawCardImage(); resolve(); }, 3000);
+        });
+    } else {
+        drawCardImage();
+    }
 
-    // 計算價格 - 使用最低價而非中位數
-    const psa10 = rawData.condition_prices.find(c => c.conditionName === 'PSA 10');
-    const psa10Price = psa10 && psa10.minPriceAmount > 0 ? psa10.minPriceAmount : 0;
+    // ── 3. 基本資訊（直接抄 dashboard 已有的值）──
+    document.getElementById('shareCardTitle').textContent = document.getElementById('heroTitle').innerText || info.title;
+    document.getElementById('shareCardSubtitle').textContent = document.getElementById('heroSub').innerText || '';
+    document.getElementById('shareCardNumber').textContent = document.getElementById('heroPn').innerText || '';
 
-    const rawPrice = rawData.condition_prices.find(c => c.conditionName === 'Raw');
-    const rawPriceValue = rawPrice && rawPrice.minPriceAmount > 0 ? rawPrice.minPriceAmount : 0;
+    // ── 4. 價格欄位：單卡 vs 整盒 各取最有代表性的值 ──
+    let calcPrice = 0;
 
-    document.getElementById('sharePSA10').textContent = psa10Price > 0 ? `$${psa10Price}` : 'N/A';
-    document.getElementById('shareRawPrice').textContent = rawPriceValue > 0 ? `$${rawPriceValue}` : 'N/A';
+    if (isBoxProduct) {
+        // 整盒：取 allHistories 裡最低成交價（同 condGrid 顯示的值）
+        const validPrices = allHistories.map(h => h.price).filter(p => p > 0);
+        const boxMin = validPrices.length > 0 ? Math.min(...validPrices) : 0;
 
-    // 時間戳
+        document.getElementById('sharePrice1Label').textContent = '📦 Box 最低成交價';
+        document.getElementById('sharePSA10').textContent = boxMin > 0 ? `$${boxMin}` : 'N/A';
+        document.getElementById('sharePrice2Label').textContent = '📊 成交筆數';
+        document.getElementById('shareRawPrice').textContent = `${allHistories.length} 筆`;
+
+        calcPrice = boxMin;
+    } else {
+        // 單卡：直接從 rawData.condition_prices 取（與 condGrid 完全相同的來源）
+        const condPrices = rawData.condition_prices || [];
+
+        // PSA 10 最低價
+        const psa10 = condPrices.find(c => c.conditionName === 'PSA 10');
+        const psa10Price = psa10
+            ? (psa10.minPriceAmount || psa10.minPrice || 0)
+            : 0;
+
+        // Raw 最低價（若無 Raw 則取非 PSA 條件中最低的）
+        const rawCond = condPrices.find(c => c.conditionName === 'Raw');
+        let rawPrice = rawCond
+            ? (rawCond.minPriceAmount || rawCond.minPrice || 0)
+            : 0;
+        if (!rawPrice) {
+            // fallback：取所有條件最低價
+            const allMin = condPrices
+                .map(c => c.minPriceAmount || c.minPrice || 0)
+                .filter(p => p > 0);
+            rawPrice = allMin.length > 0 ? Math.min(...allMin) : 0;
+        }
+
+        document.getElementById('sharePrice1Label').textContent = '💎 PSA 10 最低價';
+        document.getElementById('sharePSA10').textContent = psa10Price > 0 ? `$${psa10Price}` : 'N/A';
+        document.getElementById('sharePrice2Label').textContent = '📦 Raw 最低價';
+        document.getElementById('shareRawPrice').textContent = rawPrice > 0 ? `$${rawPrice}` : 'N/A';
+
+        // 成本試算用 PSA 10，無則用 Raw，無則用畫面上試算器目前的值
+        calcPrice = psa10Price || rawPrice ||
+                    parseFloat(document.getElementById('calcPrice').value) || 0;
+    }
+
+    // ── 5. 時間戳 ──
     const now = new Date();
     document.getElementById('shareTimestamp').textContent = now.toLocaleDateString('zh-TW');
 
-    // 生成成本試算 - 使用 PSA 10 最低價
-    const calcPrice = psa10Price > 0 ? psa10Price : (rawPriceValue > 0 ? rawPriceValue : 200);
-    const costBreakdown = calculatePurchaseCost(calcPrice);
+    // ── 6. 成本試算（直接沿用 calculateCost() 的相同費率，同步匯率）──
+    const isBox = isBoxProduct;
+    const FEE_RATE = 0.035;
+    const SHIPPING_USD = isBox ? 26 : 19;
+    const TARIFF_RATE = 0.05;
+    const TARIFF_THRESHOLD_TWD = 2000;
+    const usdTwd = exchangeRates.usdTwd || 32;
+
+    const fee = calcPrice * FEE_RATE;
+    const shipping = SHIPPING_USD;
+    let tariff = 0;
+    if (calcPrice * usdTwd > TARIFF_THRESHOLD_TWD) {
+        tariff = (calcPrice * usdTwd * TARIFF_RATE) / usdTwd;
+    }
+    const total = calcPrice + fee + shipping + tariff;
 
     const costGrid = document.getElementById('shareCostGrid');
     costGrid.innerHTML = `
@@ -2828,36 +2929,28 @@ async function populateShareCard() {
         </div>
         <div class="share-cost-item">
             <span class="share-cost-label">手續費 (3.5%):</span>
-            <span class="share-cost-value">$${costBreakdown.fee.toFixed(2)}</span>
+            <span class="share-cost-value">$${fee.toFixed(2)}</span>
         </div>
         <div class="share-cost-item">
-            <span class="share-cost-label">運費:</span>
-            <span class="share-cost-value">$${costBreakdown.shipping.toFixed(2)}</span>
+            <span class="share-cost-label">運費 (${isBox ? 'Box' : '單卡'}):</span>
+            <span class="share-cost-value">$${shipping.toFixed(2)}</span>
         </div>
         <div class="share-cost-item">
             <span class="share-cost-label">關稅 (5%):</span>
-            <span class="share-cost-value">$${costBreakdown.tariff.toFixed(2)}</span>
+            <span class="share-cost-value">${tariff > 0 ? '$' + tariff.toFixed(2) : '免關稅'}</span>
         </div>
         <div class="share-cost-item share-cost-total">
             <span class="share-cost-label">💰 購入總成本:</span>
-            <span class="share-cost-value">$${costBreakdown.total.toFixed(2)} USD</span>
+            <span class="share-cost-value">$${total.toFixed(2)} USD ≈ ${(total * usdTwd).toFixed(0)} TWD</span>
         </div>
     `;
 
-    // 生成投資建議
+    // ── 7. 投資建議 ──
     const advice = generateInvestmentAdvice();
     document.getElementById('shareAdvice').textContent = advice;
 
-    // 生成 7 天趨勢圖
+    // ── 8. 7 天趨勢圖 ──
     await renderShareChart();
-}
-
-function calculatePurchaseCost(price) {
-    const fee = price * 0.035;
-    const shipping = 19;
-    const tariff = price * 0.05;
-    const total = price + fee + shipping + tariff;
-    return { fee, shipping, tariff, total };
 }
 
 function generateInvestmentAdvice() {
