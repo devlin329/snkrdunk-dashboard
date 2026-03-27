@@ -1057,9 +1057,9 @@
                 </div>
             </div>
 
-            <!-- 90-Day Price Trend Chart -->
+            <!-- 7-Day Price Trend Chart -->
             <div class="share-chart-section">
-                <div class="share-section-title">📈 90天價格走勢</div>
+                <div class="share-section-title">📈 7天價格走勢</div>
                 <div class="share-chart-placeholder">
                     <canvas id="shareChart" width="900" height="280"></canvas>
                 </div>
@@ -2168,19 +2168,13 @@ function autoFillCalculator(isBoxProduct) {
             }
         }
     } else {
-        // 單卡商品：優先使用 PSA 10 中位數
-        const psa10Median = calculateMedian('PSA 10');
-        if (psa10Median > 0) {
-            priceToFill = psa10Median;
+        // 單卡商品：優先使用 PSA 10 最低價
+        const psa10 = rawData.condition_prices.find(c => c.conditionName === 'PSA 10');
+        if (psa10 && psa10.minPriceAmount > 0) {
+            priceToFill = psa10.minPriceAmount;
         } else {
-            // 如果沒有 PSA 10，使用 PSA 10 最低價
-            const psa10 = rawData.condition_prices.find(c => c.conditionName === 'PSA 10');
-            if (psa10 && psa10.minPriceAmount > 0) {
-                priceToFill = psa10.minPriceAmount;
-            } else {
-                // 如果都沒有，使用所有條件的中位數
-                priceToFill = calculateMedian('All');
-            }
+            // 如果沒有 PSA 10，使用所有條件的最低價中位數
+            priceToFill = calculateMedian('All');
         }
     }
 
@@ -2785,25 +2779,45 @@ async function generateShareImage() {
 async function populateShareCard() {
     const info = rawData.info;
 
-    // 基本資料
-    document.getElementById('shareCardImg').src = info.thumbnail_url;
+    // 基本資料 - 設定圖片並等待載入
+    const shareImg = document.getElementById('shareCardImg');
+    shareImg.src = info.thumbnail_url;
+
+    // 等待圖片載入完成
+    await new Promise((resolve, reject) => {
+        if (shareImg.complete) {
+            resolve();
+        } else {
+            shareImg.onload = resolve;
+            shareImg.onerror = () => {
+                console.warn('圖片載入失敗，使用預設圖片');
+                resolve(); // 即使失敗也繼續
+            };
+            // 設定 3 秒超時
+            setTimeout(resolve, 3000);
+        }
+    });
+
     document.getElementById('shareCardTitle').textContent = info.title;
     document.getElementById('shareCardSubtitle').textContent = info.subtitle || '';
     document.getElementById('shareCardNumber').textContent = info.product_number ? `#${info.product_number}` : '';
 
-    // 計算價格
-    const psa10Median = calculateMedian('PSA 10');
-    const rawPrice = rawData.condition_prices.find(c => c.conditionName === 'Raw');
+    // 計算價格 - 使用最低價而非中位數
+    const psa10 = rawData.condition_prices.find(c => c.conditionName === 'PSA 10');
+    const psa10Price = psa10 && psa10.minPriceAmount > 0 ? psa10.minPriceAmount : 0;
 
-    document.getElementById('sharePSA10').textContent = psa10Median > 0 ? `$${psa10Median}` : 'N/A';
-    document.getElementById('shareRawPrice').textContent = rawPrice ? rawPrice.minPriceFormat : 'N/A';
+    const rawPrice = rawData.condition_prices.find(c => c.conditionName === 'Raw');
+    const rawPriceValue = rawPrice && rawPrice.minPriceAmount > 0 ? rawPrice.minPriceAmount : 0;
+
+    document.getElementById('sharePSA10').textContent = psa10Price > 0 ? `$${psa10Price}` : 'N/A';
+    document.getElementById('shareRawPrice').textContent = rawPriceValue > 0 ? `$${rawPriceValue}` : 'N/A';
 
     // 時間戳
     const now = new Date();
     document.getElementById('shareTimestamp').textContent = now.toLocaleDateString('zh-TW');
 
-    // 生成成本試算
-    const calcPrice = psa10Median > 0 ? psa10Median : (rawPrice ? rawPrice.minPrice : 200);
+    // 生成成本試算 - 使用 PSA 10 最低價
+    const calcPrice = psa10Price > 0 ? psa10Price : (rawPriceValue > 0 ? rawPriceValue : 200);
     const costBreakdown = calculatePurchaseCost(calcPrice);
 
     const costGrid = document.getElementById('shareCostGrid');
@@ -2834,7 +2848,7 @@ async function populateShareCard() {
     const advice = generateInvestmentAdvice();
     document.getElementById('shareAdvice').textContent = advice;
 
-    // 生成 90 天趨勢圖
+    // 生成 7 天趨勢圖
     await renderShareChart();
 }
 
@@ -2847,23 +2861,23 @@ function calculatePurchaseCost(price) {
 }
 
 function generateInvestmentAdvice() {
-    // 計算 90 天數據
-    const days90 = allHistories.filter(h => {
+    // 計算 7 天數據
+    const days7 = allHistories.filter(h => {
         const t = new Date(h.tradedAt);
-        return (Date.now() - t.getTime()) <= 90 * 86400000;
+        return (Date.now() - t.getTime()) <= 7 * 86400000;
     });
 
-    if (days90.length === 0) {
+    if (days7.length === 0) {
         return '目前歷史數據不足，建議觀察市場趨勢後再做決策。';
     }
 
-    const prices = days90.map(h => h.price);
+    const prices = days7.map(h => h.price);
     const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
     const volatility = ((maxPrice - minPrice) / avgPrice * 100).toFixed(1);
 
-    let advice = `根據過去90天的${days90.length}筆成交數據分析，`;
+    let advice = `根據過去7天的${days7.length}筆成交數據分析，`;
 
     if (volatility < 10) {
         advice += `該卡片價格走勢穩定（波動率 ${volatility}%），市場流通性良好。建議長期持有以獲得穩定回報。`;
@@ -2880,17 +2894,19 @@ async function renderShareChart() {
     const canvas = document.getElementById('shareChart');
     const ctx = canvas.getContext('2d');
 
-    // 獲取 90 天數據
-    const days90 = allHistories.filter(h => {
+    // 獲取 PSA 10 的 7 天數據
+    const psa10Days7 = allHistories.filter(h => {
         const t = new Date(h.tradedAt);
-        return (Date.now() - t.getTime()) <= 90 * 86400000;
+        const isRecent = (Date.now() - t.getTime()) <= 7 * 86400000;
+        const isPSA10 = h.condition === 'PSA 10';
+        return isRecent && isPSA10;
     }).sort((a, b) => new Date(a.tradedAt) - new Date(b.tradedAt));
 
-    if (days90.length === 0) {
+    if (psa10Days7.length === 0) {
         ctx.font = '18px DM Sans';
         ctx.fillStyle = '#b0a396';
         ctx.textAlign = 'center';
-        ctx.fillText('無足夠歷史數據', canvas.width / 2, canvas.height / 2);
+        ctx.fillText('PSA 10 近 7 天無成交數據', canvas.width / 2, canvas.height / 2);
         return;
     }
 
@@ -2898,13 +2914,13 @@ async function renderShareChart() {
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: days90.map(h => {
+            labels: psa10Days7.map(h => {
                 const d = new Date(h.tradedAt);
                 return `${d.getMonth()+1}/${d.getDate()}`;
             }),
             datasets: [{
-                label: 'Price',
-                data: days90.map(h => h.price),
+                label: 'PSA 10 Price',
+                data: psa10Days7.map(h => h.price),
                 borderColor: '#7a9177',
                 backgroundColor: 'rgba(122,145,119,0.1)',
                 borderWidth: 3,
