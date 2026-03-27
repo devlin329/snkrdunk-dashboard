@@ -747,6 +747,76 @@
             height: 100% !important;
         }
 
+        /* ======= SEARCH VIEW ======= */
+        .search-box {
+            background: var(--card);
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+        .search-input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .search-input-row input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 2px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: .88rem;
+            font-weight: 500;
+            outline: none;
+            transition: border-color .2s;
+        }
+        .search-input-row input:focus {
+            border-color: var(--primary);
+        }
+        .search-input-row .btn {
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .search-hints {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .search-hint-label {
+            font-size: .75rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+        .search-hint-tag {
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 1.5px solid var(--border);
+            background: var(--bg);
+            color: var(--text-sec);
+            font-size: .72rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .2s;
+        }
+        .search-hint-tag:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(192,120,76,0.06);
+        }
+        .search-result-info {
+            font-size: .8rem;
+            color: var(--text-sec);
+            margin-bottom: 14px;
+            padding: 8px 14px;
+            background: var(--card);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
         @media (max-width: 768px) {
             .page-container {
                 flex-direction: column;
@@ -922,6 +992,50 @@
             .browse-card-price {
                 font-size: .75rem;
             }
+
+            /* Search view mobile */
+            .search-box {
+                padding: 14px;
+                border-radius: 12px;
+                margin-bottom: 14px;
+            }
+            .search-input-row {
+                flex-direction: column;
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+            .search-input-row input {
+                font-size: .82rem;
+                padding: 11px 14px;
+            }
+            .search-input-row .btn {
+                width: 100%;
+                padding: 12px;
+            }
+            .search-hints {
+                gap: 6px;
+            }
+            .search-hint-tag {
+                padding: 4px 10px;
+                font-size: .68rem;
+            }
+            .nav-tabs {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                gap: 6px;
+            }
+            .nav-tabs::-webkit-scrollbar {
+                display: none;
+            }
+            .nav-tab {
+                padding: 9px 16px;
+                font-size: .78rem;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
         }
     </style>
 </head>
@@ -954,6 +1068,7 @@
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="switchView('analyze')">📊 分析卡片</button>
             <button class="nav-tab" onclick="switchView('browse')">🗂️ 瀏覽系列</button>
+            <button class="nav-tab" onclick="switchView('search')">🔍 特別搜尋</button>
         </div>
 
         <div class="container">
@@ -1104,6 +1219,40 @@
             <div class="browse-grid" id="browseGrid"></div>
         </div>
 
+        <!-- Search View -->
+        <div class="browse-view" id="searchView">
+            <div class="search-box">
+                <div class="search-input-row">
+                    <input type="text" id="searchKeyword" placeholder="輸入搜尋關鍵字，例如 LUFFY ANNIVERSARY SET" />
+                    <button class="btn btn-primary" onclick="doKeywordSearch()">🔍 搜尋</button>
+                </div>
+                <div class="search-hints">
+                    <span class="search-hint-label">熱門搜尋：</span>
+                    <button class="search-hint-tag" onclick="quickSearch('Monkey.D.Luffy SEC')">Luffy SEC</button>
+                    <button class="search-hint-tag" onclick="quickSearch('LUFFY ANNIVERSARY SET')">Luffy Anniversary</button>
+                    <button class="search-hint-tag" onclick="quickSearch('Roronoa Zoro')">Zoro</button>
+                    <button class="search-hint-tag" onclick="quickSearch('Nami')">Nami</button>
+                    <button class="search-hint-tag" onclick="quickSearch('Shanks')">Shanks</button>
+                    <button class="search-hint-tag" onclick="quickSearch('Charizard')">Charizard</button>
+                    <button class="search-hint-tag" onclick="quickSearch('Pikachu')">Pikachu</button>
+                </div>
+            </div>
+
+            <!-- 搜尋排序 -->
+            <div class="browse-categories" id="searchSortBtns" style="margin-bottom: 12px; display: none;">
+                <button class="category-btn active" onclick="setSearchSort('featured', this)">⭐ Featured</button>
+                <button class="category-btn" onclick="setSearchSort('price_asc', this)">💰 Price: Low to High</button>
+                <button class="category-btn" onclick="setSearchSort('price_desc', this)">💎 Price: High to Low</button>
+            </div>
+
+            <div class="search-result-info" id="searchResultInfo" style="display:none;"></div>
+            <div class="browse-loader" id="searchLoader" style="display:none;">
+                <div class="spinner"></div>
+                <p style="margin-top:12px;">搜尋中...</p>
+            </div>
+            <div class="browse-grid" id="searchGrid"></div>
+        </div>
+
     </div>
     </div><!-- End page-container -->
 
@@ -1246,10 +1395,12 @@ let activeCondition = 'All', activeDays = 90, currentUrl = '';
 let chart = null, volChart = null, shareChartInstance = null;
 let exchangeRates = { usdTwd: 0, jpyTwd: 0, twdJpy: 0 }; // 匯率資料
 let currentPortfolioKey = null; // 當前查看的投資項目
-let currentView = 'analyze'; // 當前視圖：analyze 或 browse
+let currentView = 'analyze'; // 當前視圖：analyze, browse, search
 let currentBrand = 'onepiece'; // 當前品牌：onepiece 或 pokemon
 let currentCategory = 25; // 當前類別
 let currentSort = 'featured'; // 當前排序：featured, price_asc, price_desc
+let searchSort = 'featured'; // 特別搜尋的排序
+let lastSearchKeyword = ''; // 上次搜尋的關鍵字
 
 // ======= PORTFOLIO PRICE CACHE =======
 let portfolioPriceCache = {}; // { "cardId_condition": { price: 123, timestamp: xxx } }
@@ -1259,19 +1410,23 @@ function switchView(view) {
     currentView = view;
 
     // 切換 Tab 樣式
+    const tabMap = { analyze: '分析', browse: '瀏覽', search: '搜尋' };
     document.querySelectorAll('.nav-tab').forEach(tab => {
-        tab.classList.toggle('active', tab.textContent.includes(view === 'analyze' ? '分析' : '瀏覽'));
+        tab.classList.toggle('active', tab.textContent.includes(tabMap[view] || ''));
     });
 
     // 切換內容區域
     const container = document.querySelector('.container');
     const browseView = document.getElementById('browseView');
+    const searchView = document.getElementById('searchView');
+
+    container.style.display = 'none';
+    browseView.classList.remove('active');
+    searchView.classList.remove('active');
 
     if (view === 'analyze') {
         container.style.display = 'block';
-        browseView.classList.remove('active');
-    } else {
-        container.style.display = 'none';
+    } else if (view === 'browse') {
         browseView.classList.add('active');
         // 根據品牌類型決定載入方式
         const KEYWORD_BRANDS = { luffy: 'Monkey.D.Luffy SEC', luffy_anniversary: 'LUFFY ANNIVERSARY SET' };
@@ -1280,6 +1435,10 @@ function switchView(view) {
         } else {
             loadBrowseCategory(currentBrand, 14, document.querySelector('.category-btn'));
         }
+    } else if (view === 'search') {
+        searchView.classList.add('active');
+        // 聚焦輸入框
+        setTimeout(() => document.getElementById('searchKeyword').focus(), 100);
     }
 }
 
@@ -1393,6 +1552,99 @@ async function loadSearchResults(keyword) {
         console.error('搜尋失敗:', error);
     }
 }
+
+// ======= SPECIAL SEARCH (特別搜尋) =======
+function quickSearch(keyword) {
+    document.getElementById('searchKeyword').value = keyword;
+    doKeywordSearch();
+}
+
+function setSearchSort(sort, btnElement) {
+    searchSort = sort;
+    btnElement.parentElement.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+    if (lastSearchKeyword) {
+        doKeywordSearch();
+    }
+}
+
+async function doKeywordSearch() {
+    const input = document.getElementById('searchKeyword');
+    const keyword = input.value.trim();
+    if (!keyword) {
+        input.focus();
+        return;
+    }
+
+    lastSearchKeyword = keyword;
+
+    const loader = document.getElementById('searchLoader');
+    const grid = document.getElementById('searchGrid');
+    const info = document.getElementById('searchResultInfo');
+    const sortBtns = document.getElementById('searchSortBtns');
+
+    loader.style.display = 'block';
+    grid.innerHTML = '';
+    info.style.display = 'none';
+
+    try {
+        const response = await fetch('/api/search', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                keyword: keyword,
+                page: 1,
+                per_page: 60,
+                sort: searchSort
+            })
+        });
+
+        const data = await response.json();
+        const cards = data.tradingCards || [];
+
+        loader.style.display = 'none';
+
+        // 顯示結果資訊和排序按鈕
+        info.style.display = 'block';
+        info.innerHTML = `🔍 搜尋「<strong>${keyword}</strong>」找到 <strong>${cards.length}</strong> 張卡片`;
+        sortBtns.style.display = 'flex';
+
+        if (cards.length === 0) {
+            grid.innerHTML = '<p style="text-align:center;color:var(--muted);padding:40px;">沒有找到相關卡片，請試試其他關鍵字</p>';
+            sortBtns.style.display = 'none';
+            return;
+        }
+
+        cards.forEach(card => {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'browse-card';
+            cardEl.onclick = () => analyzeCardById(card.id);
+
+            cardEl.innerHTML = `
+                <img src="${card.thumbnailUrl}" alt="${card.name}" />
+                <div class="browse-card-number">${card.productNumber || 'N/A'}</div>
+                <div class="browse-card-title">${card.name}</div>
+                <div class="browse-card-price">${card.minPriceFormat}</div>
+            `;
+
+            grid.appendChild(cardEl);
+        });
+    } catch (error) {
+        loader.style.display = 'none';
+        grid.innerHTML = '<p style="text-align:center;color:var(--rust);padding:40px;">搜尋失敗，請重試</p>';
+        console.error('特別搜尋失敗:', error);
+    }
+}
+
+// 支援 Enter 鍵搜尋
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchKeyword');
+    if (searchInput) {
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') doKeywordSearch();
+        });
+    }
+});
 
 // ======= BROWSE CARDS =======
 async function loadBrowseCategory(brand, categoryId, btnElement) {
