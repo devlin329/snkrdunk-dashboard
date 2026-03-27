@@ -2894,19 +2894,17 @@ async function renderShareChart() {
     const canvas = document.getElementById('shareChart');
     const ctx = canvas.getContext('2d');
 
-    // 獲取 PSA 10 的 7 天數據
-    const psa10Days7 = allHistories.filter(h => {
+    // 獲取 7 天數據
+    const days7 = allHistories.filter(h => {
         const t = new Date(h.tradedAt);
-        const isRecent = (Date.now() - t.getTime()) <= 7 * 86400000;
-        const isPSA10 = h.condition === 'PSA 10';
-        return isRecent && isPSA10;
+        return (Date.now() - t.getTime()) <= 7 * 86400000;
     }).sort((a, b) => new Date(a.tradedAt) - new Date(b.tradedAt));
 
-    if (psa10Days7.length === 0) {
+    if (days7.length === 0) {
         ctx.font = '18px DM Sans';
         ctx.fillStyle = '#b0a396';
         ctx.textAlign = 'center';
-        ctx.fillText('PSA 10 近 7 天無成交數據', canvas.width / 2, canvas.height / 2);
+        ctx.fillText('無足夠歷史數據', canvas.width / 2, canvas.height / 2);
         return;
     }
 
@@ -2914,13 +2912,13 @@ async function renderShareChart() {
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: psa10Days7.map(h => {
+            labels: days7.map(h => {
                 const d = new Date(h.tradedAt);
                 return `${d.getMonth()+1}/${d.getDate()}`;
             }),
             datasets: [{
-                label: 'PSA 10 Price',
-                data: psa10Days7.map(h => h.price),
+                label: 'Price',
+                data: days7.map(h => h.price),
                 borderColor: '#7a9177',
                 backgroundColor: 'rgba(122,145,119,0.1)',
                 borderWidth: 3,
