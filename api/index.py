@@ -287,6 +287,7 @@ class BrowseRequest(BaseModel):
     category_id: int
     page: int = 1
     per_page: int = 40
+    sort: str = "featured"  # featured, price_asc, price_desc
 
 
 @app.post("/api/browse")
@@ -294,9 +295,18 @@ async def browse_cards(req: BrowseRequest):
     """獲取系列卡片列表"""
     from fastapi.responses import JSONResponse
 
-    data = _api_get(
-        f"/en/v1/trading-cards?brandSlug={req.brand}&categoryId={req.category_id}&page={req.page}&perPage={req.per_page}"
-    )
+    # 構建 API URL
+    url = f"/en/v1/trading-cards?brandSlug={req.brand}&categoryId={req.category_id}&page={req.page}&perPage={req.per_page}"
+
+    # 添加排序參數
+    if req.sort == "featured":
+        url += "&sort=featured"
+    elif req.sort == "price_asc":
+        url += "&sort=price&order=asc"
+    elif req.sort == "price_desc":
+        url += "&sort=price&order=desc"
+
+    data = _api_get(url)
 
     if not data:
         return JSONResponse(content={"tradingCards": []})

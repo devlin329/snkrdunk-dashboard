@@ -793,6 +793,13 @@
                 <button class="brand-btn" onclick="switchBrand('pokemon', this)">⚡ Pokémon</button>
             </div>
 
+            <!-- 排序選項 -->
+            <div class="browse-categories" style="margin-bottom: 12px;">
+                <button class="category-btn active" onclick="setSortOrder('featured', this)">⭐ Featured</button>
+                <button class="category-btn" onclick="setSortOrder('price_asc', this)">💰 Price: Low to High</button>
+                <button class="category-btn" onclick="setSortOrder('price_desc', this)">💎 Price: High to Low</button>
+            </div>
+
             <!-- 類別選擇 -->
             <div class="browse-categories" id="browseCategories">
                 <button class="category-btn active" data-category="25" onclick="loadBrowseCategory('onepiece', 25, this)">📦 ONE PIECE DAY'24</button>
@@ -889,6 +896,8 @@ let exchangeRates = { usdTwd: 0, jpyTwd: 0, twdJpy: 0 }; // 匯率資料
 let currentPortfolioKey = null; // 當前查看的投資項目
 let currentView = 'analyze'; // 當前視圖：analyze 或 browse
 let currentBrand = 'onepiece'; // 當前品牌：onepiece 或 pokemon
+let currentCategory = 25; // 當前類別
+let currentSort = 'featured'; // 當前排序：featured, price_asc, price_desc
 
 // ======= PORTFOLIO PRICE CACHE =======
 let portfolioPriceCache = {}; // { "cardId_condition": { price: 123, timestamp: xxx } }
@@ -917,6 +926,18 @@ function switchView(view) {
     }
 }
 
+// ======= SORT ORDER =======
+function setSortOrder(sort, btnElement) {
+    currentSort = sort;
+
+    // 更新排序按鈕樣式
+    btnElement.parentElement.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+
+    // 重新載入當前類別
+    loadBrowseCategory(currentBrand, currentCategory);
+}
+
 // ======= BRAND SWITCHING =======
 function switchBrand(brand, btnElement) {
     currentBrand = brand;
@@ -940,14 +961,19 @@ function switchBrand(brand, btnElement) {
     }
 
     // 載入第一個類別
+    currentCategory = 25;
     loadBrowseCategory(brand, 25, categoriesDiv.querySelector('.category-btn'));
 }
 
 // ======= BROWSE CARDS =======
 async function loadBrowseCategory(brand, categoryId, btnElement) {
+    // 更新當前類別
+    currentCategory = categoryId;
+
     // 更新按鈕樣式
     if (btnElement) {
-        document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+        const parentDiv = btnElement.parentElement;
+        parentDiv.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
         btnElement.classList.add('active');
     }
 
@@ -961,7 +987,13 @@ async function loadBrowseCategory(brand, categoryId, btnElement) {
         const response = await fetch('/api/browse', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ brand: brand, category_id: categoryId, page: 1, per_page: 40 })
+            body: JSON.stringify({
+                brand: brand,
+                category_id: categoryId,
+                page: 1,
+                per_page: 40,
+                sort: currentSort
+            })
         });
 
         const data = await response.json();
