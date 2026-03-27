@@ -999,6 +999,7 @@
                 <button class="brand-btn active" onclick="switchBrand('onepiece', this)">🏴‍☠️ ONE PIECE</button>
                 <button class="brand-btn" onclick="switchBrand('pokemon', this)">⚡ Pokémon</button>
                 <button class="brand-btn" onclick="switchBrand('luffy', this)">👒 Luffy SEC</button>
+                <button class="brand-btn" onclick="switchBrand('luffy_anniversary', this)">🎉 Luffy Anniversary</button>
             </div>
 
             <!-- 排序選項 -->
@@ -1191,7 +1192,7 @@ function switchView(view) {
         container.style.display = 'none';
         browseView.classList.add('active');
         // 根據品牌類型決定載入方式
-        const KEYWORD_BRANDS = { luffy: 'Monkey.D.Luffy SEC' };
+        const KEYWORD_BRANDS = { luffy: 'Monkey.D.Luffy SEC', luffy_anniversary: 'LUFFY ANNIVERSARY SET' };
         if (KEYWORD_BRANDS[currentBrand]) {
             loadSearchResults(KEYWORD_BRANDS[currentBrand]);
         } else {
@@ -1209,7 +1210,7 @@ function setSortOrder(sort, btnElement) {
     btnElement.classList.add('active');
 
     // 根據品牌類型決定重新載入方式
-    const KEYWORD_BRANDS = { luffy: 'Monkey.D.Luffy SEC' };
+    const KEYWORD_BRANDS = { luffy: 'Monkey.D.Luffy SEC', luffy_anniversary: 'LUFFY ANNIVERSARY SET' };
     if (KEYWORD_BRANDS[currentBrand]) {
         loadSearchResults(KEYWORD_BRANDS[currentBrand]);
     } else {
@@ -1238,7 +1239,8 @@ function switchBrand(brand, btnElement) {
             { id: 14, label: '📦 Box & Pack' },
             { id: 25, label: '🎴 Single Card' }
         ]},
-        luffy: { type: 'keyword', keyword: 'Monkey.D.Luffy SEC' }
+        luffy: { type: 'keyword', keyword: 'Monkey.D.Luffy SEC' },
+        luffy_anniversary: { type: 'keyword', keyword: 'LUFFY ANNIVERSARY SET' }
     };
 
     const config = BRAND_CONFIG[brand];
