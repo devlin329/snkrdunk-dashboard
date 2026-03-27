@@ -295,17 +295,18 @@ async def browse_cards(req: BrowseRequest):
     """獲取系列卡片列表"""
     from fastapi.responses import JSONResponse
 
-    # 構建 API URL
-    url = f"/en/v1/trading-cards?brandSlug={req.brand}&categoryId={req.category_id}&page={req.page}&perPage={req.per_page}"
+    # 構建 API URL - 使用 brandId 而不是 brandSlug
+    url = f"/en/v1/trading-cards?brandId={req.brand}&categoryId={req.category_id}&page={req.page}&perPage={req.per_page}"
 
-    # 添加排序參數
+    # 添加排序參數 - 使用 order 參數
     if req.sort == "featured":
-        url += "&sort=featured"
+        url += "&order=popular"
     elif req.sort == "price_asc":
-        url += "&sort=price&order=asc"
+        url += "&order=price_asc"
     elif req.sort == "price_desc":
-        url += "&sort=price&order=desc"
+        url += "&order=price_desc"
 
+    print(f"[BROWSE] API URL: {url}")
     data = _api_get(url)
 
     if not data:
