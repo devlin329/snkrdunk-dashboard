@@ -47,15 +47,27 @@ def _get_cookie():
             headers={"User-Agent": HEADERS["User-Agent"]}
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
-            cookies = resp.headers.get('Set-Cookie', '')
+            # 獲取所有 Set-Cookie headers
+            all_cookies = []
+            for header, value in resp.headers.items():
+                if header.lower() == 'set-cookie':
+                    all_cookies.append(value)
+                    print(f"[COOKIE DEBUG] Set-Cookie: {value[:100]}...")
+
+            cookies_str = '; '.join(all_cookies)
+
             # 提取 ENSID
-            ensid_match = re.search(r'ENSID=([^;]+)', cookies)
+            ensid_match = re.search(r'ENSID=([^;]+)', cookies_str)
             if ensid_match:
                 ensid = ensid_match.group(1)
-                print(f"[COOKIE] 成功獲取 ENSID: {ensid[:30]}...")
+                print(f"[COOKIE] 成功獲取 ENSID: {ensid[:50]}...")
                 return f"ENSID={ensid}"
+            else:
+                print(f"[COOKIE] 未找到 ENSID，完整 Cookie: {cookies_str[:200]}")
     except Exception as e:
         print(f"[COOKIE ERROR] 無法獲取 Cookie: {e}")
+        import traceback
+        traceback.print_exc()
     return ""
 
 def _api_get(path: str, use_cookie=False):
@@ -161,10 +173,16 @@ async def scrape_api(req: ScrapeRequest):
 
     all_histories = []
 
+    # 調試：檢查 sale_prices_data 內容
+    if sale_prices_data:
+        print(f"[SALE_PRICES] API 回應 keys: {list(sale_prices_data.keys())}")
+        if "code" in sale_prices_data:
+            print(f"[SALE_PRICES] 錯誤回應: {sale_prices_data}")
+
     # 方案 A: 如果 sale-prices API 成功，將其轉換為 trading_histories 格式
     if sale_prices_data and "points" in sale_prices_data:
         points = sale_prices_data.get("points", [])
-        print(f"[SALE_PRICES] 成功獲取 {len(points)} 筆歷史價格點")
+        print(f"[SALE_PRICES] ✅ 成功獲取 {len(points)} 筆歷史價格點")
 
         # 轉換格式：[timestamp_ms, price] -> {tradedAt, price, priceFormat, ...}
         from datetime import datetime
