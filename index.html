@@ -332,10 +332,81 @@
         }
 
         @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .sidebar { width: 100%; min-width: 100%; height: auto; position: relative; flex-direction: row; flex-wrap: wrap; padding: 12px; border-right: none; border-bottom: 1px solid var(--border); }
-            .sidebar h2 { width: 100%; }
-            .wl-item { flex: 0 0 auto; margin-bottom: 0; }
+            .page-container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                min-width: 100%;
+                max-width: 100%;
+                height: auto;
+                max-height: 400px;
+                position: relative;
+                flex-direction: column;
+                padding: 16px;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                overflow-y: auto;
+            }
+            .sidebar h2 {
+                font-size: .9rem;
+                margin-bottom: 10px;
+            }
+            .wl-item {
+                margin-bottom: 4px;
+            }
+            .pf-item {
+                margin-bottom: 4px;
+            }
+            .portfolio-summary {
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+            .summary-row {
+                font-size: .75rem;
+            }
+
+            .main {
+                width: 100%;
+                padding: 16px 12px;
+            }
+
+            .hero {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .hero img {
+                width: 100%;
+                height: 180px;
+                object-fit: contain;
+            }
+
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+            }
+
+            .chart-box {
+                padding: 12px;
+            }
+
+            .modal {
+                width: 95%;
+                max-width: 95%;
+                padding: 20px 16px;
+            }
+
+            .footer {
+                padding: 16px;
+                font-size: .7rem;
+            }
+            .footer-content {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .footer-divider {
+                display: none;
+            }
         }
     </style>
 </head>
