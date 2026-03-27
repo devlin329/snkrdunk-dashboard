@@ -20,6 +20,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
         :root {
@@ -295,6 +297,20 @@
             gap: 6px;
         }
         .btn-add:hover { background: rgba(122,145,119,.2); }
+        .btn-share {
+            background: linear-gradient(135deg, var(--primary), var(--sage));
+            color: #fff;
+            border: none;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-share:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
         .action-buttons {
             display: flex;
             gap: 8px;
@@ -529,6 +545,192 @@
             font-weight: 300;
         }
 
+        /* ======= SHARE CARD (Hidden template for image generation) ======= */
+        #shareCard {
+            position: fixed;
+            left: -9999px;
+            top: 0;
+            width: 1080px;
+            background: linear-gradient(135deg, #faf6f1 0%, #f5efe7 100%);
+            padding: 60px;
+            font-family: 'DM Sans', sans-serif;
+        }
+        .share-container {
+            background: #fff;
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: 0 20px 60px rgba(139,111,78,0.15);
+        }
+        .share-header {
+            display: flex;
+            gap: 28px;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            padding-bottom: 32px;
+            border-bottom: 2px solid rgba(139,111,78,0.12);
+        }
+        .share-header img {
+            width: 200px;
+            height: 280px;
+            object-fit: cover;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+        .share-info {
+            flex: 1;
+        }
+        .share-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #3d3229;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+        .share-subtitle {
+            font-size: 18px;
+            color: #7a6b5d;
+            margin-bottom: 8px;
+        }
+        .share-number {
+            font-size: 16px;
+            color: #b0a396;
+            margin-bottom: 20px;
+        }
+        .share-price-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+        .share-price-item {
+            background: rgba(122,145,119,0.08);
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(122,145,119,0.2);
+        }
+        .share-price-label {
+            font-size: 13px;
+            color: #7a6b5d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .share-price-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #7a9177;
+        }
+        .share-chart-section {
+            margin-bottom: 36px;
+        }
+        .share-section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #8b6f4e;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .share-chart-placeholder {
+            width: 100%;
+            height: 280px;
+            background: #f5efe7;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(139,111,78,0.1);
+        }
+        .share-cost-section {
+            background: rgba(192,120,76,0.05);
+            padding: 28px;
+            border-radius: 16px;
+            margin-bottom: 36px;
+            border: 2px solid rgba(192,120,76,0.15);
+        }
+        .share-cost-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px 32px;
+            margin-top: 16px;
+        }
+        .share-cost-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+            color: #3d3229;
+            padding: 8px 0;
+        }
+        .share-cost-label {
+            color: #7a6b5d;
+        }
+        .share-cost-value {
+            font-weight: 700;
+            color: #3d3229;
+        }
+        .share-cost-total {
+            grid-column: 1 / -1;
+            font-size: 20px;
+            padding: 16px 0;
+            border-top: 2px solid rgba(139,111,78,0.2);
+            margin-top: 8px;
+        }
+        .share-cost-total .share-cost-value {
+            color: #c0784c;
+            font-size: 24px;
+        }
+        .share-advice {
+            background: rgba(122,145,119,0.08);
+            padding: 24px;
+            border-radius: 16px;
+            border-left: 6px solid #7a9177;
+            margin-bottom: 36px;
+        }
+        .share-advice-text {
+            font-size: 17px;
+            color: #3d3229;
+            line-height: 1.7;
+            font-style: italic;
+        }
+        .share-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 28px;
+            border-top: 2px solid rgba(139,111,78,0.12);
+        }
+        .share-branding {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .share-brand-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #c0784c;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .share-brand-info {
+            font-size: 14px;
+            color: #b0a396;
+        }
+        .share-qr {
+            width: 120px;
+            height: 120px;
+            background: #fff;
+            border: 3px solid rgba(139,111,78,0.12);
+            border-radius: 12px;
+            padding: 8px;
+        }
+        .share-qr canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
         @media (max-width: 768px) {
             .page-container {
                 flex-direction: column;
@@ -683,6 +885,9 @@
                     <button class="btn btn-add" id="addPortfolioBtn" onclick="openAddPortfolioModal()" style="display:none" title="加入投資組合">
                         <span>💼</span> 加投資組合
                     </button>
+                    <button class="btn btn-share" id="shareBtn" onclick="generateShareImage()" style="display:none" title="分享分析報告">
+                        <span>📤</span> 分享
+                    </button>
                 </div>
             </div>
             <div class="loader" id="loader"><div class="spinner"></div><span style="color:var(--muted)">Fetching market data...</span></div>
@@ -826,6 +1031,67 @@
     </footer>
 
     <div id="toast">✅ Done!</div>
+
+    <!-- ======= SHARE CARD TEMPLATE (Hidden, for image generation) ======= -->
+    <div id="shareCard">
+        <div class="share-container">
+            <!-- Card Header with Image and Basic Info -->
+            <div class="share-header">
+                <img id="shareCardImg" src="" alt="Card">
+                <div class="share-info">
+                    <div class="share-title" id="shareCardTitle">-</div>
+                    <div class="share-subtitle" id="shareCardSubtitle">-</div>
+                    <div class="share-number" id="shareCardNumber">-</div>
+
+                    <!-- Price Grid -->
+                    <div class="share-price-grid">
+                        <div class="share-price-item">
+                            <div class="share-price-label">💎 PSA 10 中位數</div>
+                            <div class="share-price-value" id="sharePSA10">-</div>
+                        </div>
+                        <div class="share-price-item">
+                            <div class="share-price-label">📦 Raw 最低價</div>
+                            <div class="share-price-value" id="shareRawPrice">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 90-Day Price Trend Chart -->
+            <div class="share-chart-section">
+                <div class="share-section-title">📈 90天價格走勢</div>
+                <div class="share-chart-placeholder">
+                    <canvas id="shareChart" width="900" height="280"></canvas>
+                </div>
+            </div>
+
+            <!-- Purchase Cost Breakdown -->
+            <div class="share-cost-section">
+                <div class="share-section-title">🧮 購入成本試算</div>
+                <div class="share-cost-grid" id="shareCostGrid">
+                    <!-- Dynamically filled -->
+                </div>
+            </div>
+
+            <!-- Investment Advice -->
+            <div class="share-advice">
+                <div class="share-advice-text" id="shareAdvice">
+                    根據過去90天的價格趨勢分析，該卡片價格走勢穩定，市場流通性良好。建議長期持有以獲得最佳投資回報。
+                </div>
+            </div>
+
+            <!-- Footer with Branding and QR Code -->
+            <div class="share-footer">
+                <div class="share-branding">
+                    <div class="share-brand-title">🍂 SNKRDUNK Dashboard</div>
+                    <div class="share-brand-info">v1.0.0 | Created by devcharles | <span id="shareTimestamp">-</span></div>
+                </div>
+                <div class="share-qr" id="shareQRCode">
+                    <!-- QR code will be generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- 加入投資組合對話框 -->
     <div class="modal-overlay" id="portfolioModal">
@@ -2011,6 +2277,10 @@ function render() {
     const addPortfolioBtn = document.getElementById('addPortfolioBtn');
     if (addPortfolioBtn) addPortfolioBtn.style.display = 'inline-flex';
 
+    // 顯示「分享」按鈕
+    const shareBtn = document.getElementById('shareBtn');
+    if (shareBtn) shareBtn.style.display = 'inline-flex';
+
     // 重新渲染投資組合側邊欄（更新當前卡片的市價）
     renderPortfolio();
 
@@ -2378,6 +2648,243 @@ function showToast(msg) {
     t.textContent = msg || '✅ Done!';
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ======= SHARE FUNCTIONALITY =======
+async function generateShareImage() {
+    if (!rawData) {
+        alert('請先分析一張卡片');
+        return;
+    }
+
+    const shareBtn = document.getElementById('shareBtn');
+    shareBtn.disabled = true;
+    shareBtn.innerHTML = '<span>⏳</span> 生成中...';
+
+    try {
+        // 1. 填充分享卡片數據
+        await populateShareCard();
+
+        // 2. 生成 QR Code
+        generateShareQRCode();
+
+        // 3. 等待一下讓 QR code 渲染
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 4. 使用 html2canvas 生成圖片
+        const shareCard = document.getElementById('shareCard');
+        const canvas = await html2canvas(shareCard, {
+            scale: 2,
+            backgroundColor: '#faf6f1',
+            logging: false,
+            useCORS: true,
+            allowTaint: true
+        });
+
+        // 5. 下載圖片
+        canvas.toBlob(blob => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const cardName = rawData.info.product_number || 'card';
+            a.download = `SNKRDUNK_${cardName}_analysis.png`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('✅ 分享圖片已下載！');
+        });
+
+    } catch (error) {
+        console.error('生成分享圖片失敗:', error);
+        alert('生成失敗: ' + error.message);
+    } finally {
+        shareBtn.disabled = false;
+        shareBtn.innerHTML = '<span>📤</span> 分享';
+    }
+}
+
+async function populateShareCard() {
+    const info = rawData.info;
+
+    // 基本資料
+    document.getElementById('shareCardImg').src = info.thumbnail_url;
+    document.getElementById('shareCardTitle').textContent = info.title;
+    document.getElementById('shareCardSubtitle').textContent = info.subtitle || '';
+    document.getElementById('shareCardNumber').textContent = info.product_number ? `#${info.product_number}` : '';
+
+    // 計算價格
+    const psa10Median = calculateMedian('PSA 10');
+    const rawPrice = rawData.condition_prices.find(c => c.conditionName === 'Raw');
+
+    document.getElementById('sharePSA10').textContent = psa10Median > 0 ? `$${psa10Median}` : 'N/A';
+    document.getElementById('shareRawPrice').textContent = rawPrice ? rawPrice.minPriceFormat : 'N/A';
+
+    // 時間戳
+    const now = new Date();
+    document.getElementById('shareTimestamp').textContent = now.toLocaleDateString('zh-TW');
+
+    // 生成成本試算
+    const calcPrice = psa10Median > 0 ? psa10Median : (rawPrice ? rawPrice.minPrice : 200);
+    const costBreakdown = calculatePurchaseCost(calcPrice);
+
+    const costGrid = document.getElementById('shareCostGrid');
+    costGrid.innerHTML = `
+        <div class="share-cost-item">
+            <span class="share-cost-label">商品價格:</span>
+            <span class="share-cost-value">$${calcPrice.toFixed(2)}</span>
+        </div>
+        <div class="share-cost-item">
+            <span class="share-cost-label">手續費 (3.5%):</span>
+            <span class="share-cost-value">$${costBreakdown.fee.toFixed(2)}</span>
+        </div>
+        <div class="share-cost-item">
+            <span class="share-cost-label">運費:</span>
+            <span class="share-cost-value">$${costBreakdown.shipping.toFixed(2)}</span>
+        </div>
+        <div class="share-cost-item">
+            <span class="share-cost-label">關稅 (5%):</span>
+            <span class="share-cost-value">$${costBreakdown.tariff.toFixed(2)}</span>
+        </div>
+        <div class="share-cost-item share-cost-total">
+            <span class="share-cost-label">💰 購入總成本:</span>
+            <span class="share-cost-value">$${costBreakdown.total.toFixed(2)} USD</span>
+        </div>
+    `;
+
+    // 生成投資建議
+    const advice = generateInvestmentAdvice();
+    document.getElementById('shareAdvice').textContent = advice;
+
+    // 生成 90 天趨勢圖
+    await renderShareChart();
+}
+
+function calculatePurchaseCost(price) {
+    const fee = price * 0.035;
+    const shipping = 19;
+    const tariff = price * 0.05;
+    const total = price + fee + shipping + tariff;
+    return { fee, shipping, tariff, total };
+}
+
+function generateInvestmentAdvice() {
+    // 計算 90 天數據
+    const days90 = allHistories.filter(h => {
+        const t = new Date(h.tradedAt);
+        return (Date.now() - t.getTime()) <= 90 * 86400000;
+    });
+
+    if (days90.length === 0) {
+        return '目前歷史數據不足，建議觀察市場趨勢後再做決策。';
+    }
+
+    const prices = days90.map(h => h.price);
+    const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const volatility = ((maxPrice - minPrice) / avgPrice * 100).toFixed(1);
+
+    let advice = `根據過去90天的${days90.length}筆成交數據分析，`;
+
+    if (volatility < 10) {
+        advice += `該卡片價格走勢穩定（波動率 ${volatility}%），市場流通性良好。建議長期持有以獲得穩定回報。`;
+    } else if (volatility < 25) {
+        advice += `價格有適度波動（波動率 ${volatility}%），建議在低點分批買入，高點分批賣出，把握短線獲利機會。`;
+    } else {
+        advice += `價格波動較大（波動率 ${volatility}%），市場投機性較強。建議謹慎評估風險，設定停損點後再進場。`;
+    }
+
+    return advice;
+}
+
+async function renderShareChart() {
+    const canvas = document.getElementById('shareChart');
+    const ctx = canvas.getContext('2d');
+
+    // 獲取 90 天數據
+    const days90 = allHistories.filter(h => {
+        const t = new Date(h.tradedAt);
+        return (Date.now() - t.getTime()) <= 90 * 86400000;
+    }).sort((a, b) => new Date(a.tradedAt) - new Date(b.tradedAt));
+
+    if (days90.length === 0) {
+        ctx.font = '18px DM Sans';
+        ctx.fillStyle = '#b0a396';
+        ctx.textAlign = 'center';
+        ctx.fillText('無足夠歷史數據', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+
+    // 使用 Chart.js 生成圖表
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: days90.map(h => {
+                const d = new Date(h.tradedAt);
+                return `${d.getMonth()+1}/${d.getDate()}`;
+            }),
+            datasets: [{
+                label: 'Price',
+                data: days90.map(h => h.price),
+                borderColor: '#7a9177',
+                backgroundColor: 'rgba(122,145,119,0.1)',
+                borderWidth: 3,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(61,50,41,0.9)',
+                    padding: 12,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    callbacks: {
+                        label: (context) => `價格: $${context.parsed.y}`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: '#7a6b5d',
+                        font: { size: 11 },
+                        maxRotation: 45,
+                        minRotation: 45
+                    },
+                    grid: { display: false }
+                },
+                y: {
+                    ticks: {
+                        color: '#7a6b5d',
+                        font: { size: 12 },
+                        callback: v => '$' + v.toLocaleString()
+                    },
+                    grid: { color: 'rgba(139,111,78,0.1)' }
+                }
+            }
+        }
+    });
+}
+
+function generateShareQRCode() {
+    const qrContainer = document.getElementById('shareQRCode');
+    qrContainer.innerHTML = ''; // 清空舊的 QR code
+
+    // 使用 QRCode.js 生成 QR Code
+    new QRCode(qrContainer, {
+        text: currentUrl,
+        width: 104,
+        height: 104,
+        colorDark: '#3d3229',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+    });
 }
 </script>
 </body>
