@@ -2687,6 +2687,9 @@ async function loadPortfolioCardByKey(key) {
         return;
     }
 
+    // 先切換到分析頁面，讓使用者立即看到跳轉
+    switchView('analyze');
+
     const url = `https://snkrdunk.com/en/trading-cards/${item.card_id}`;
     document.getElementById('urlInput').value = url;
     await fetchAll();
@@ -2696,9 +2699,6 @@ async function loadPortfolioCardByKey(key) {
 
     // 顯示 ROI 分析
     renderROI();
-
-    // 切換到分析頁面
-    switchView('analyze');
 
     // 滾動到 ROI 區域
     setTimeout(() => {
