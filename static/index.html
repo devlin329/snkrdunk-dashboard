@@ -1481,7 +1481,7 @@
                     <div class="roi-header">
                         <h3>💼 投資報酬分析</h3>
                         <div class="roi-actions">
-                            <button onclick="editPortfolioItem()">編輯</button>
+                            <button onclick="openEditPortfolioModal(currentPortfolioKey)">編輯</button>
                             <button onclick="removePortfolioItem()">移除</button>
                         </div>
                     </div>
@@ -1658,7 +1658,11 @@
     <!-- 加入投資組合對話框 -->
     <div class="modal-overlay" id="portfolioModal">
         <div class="modal">
-            <h3>💼 加入投資組合</h3>
+            <input type="hidden" id="modalEditingKey" value="">
+            <input type="hidden" id="modalEditCardId" value="">
+            <input type="hidden" id="modalEditCardImage" value="">
+            <input type="hidden" id="modalEditIsBox" value="">
+            <h3 id="modalTitle">💼 加入投資組合</h3>
             <div class="modal-row">
                 <label>卡片名稱</label>
                 <input type="text" id="modalCardName" readonly>
@@ -2283,7 +2287,8 @@ function renderPortfolioPage() {
                         <span class="pv-detail-val">${addedDate}</span>
                     </div>
                     <div style="display:flex;gap:8px;margin-top:10px;">
-                        <button onclick="event.stopPropagation(); loadPortfolioCard('${item.card_id}', '${item.condition}')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--primary);background:none;color:var(--primary);font-size:.75rem;font-weight:600;cursor:pointer;">📊 查看分析</button>
+                        <button onclick="event.stopPropagation(); loadPortfolioCardByKey('${key}')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--primary);background:none;color:var(--primary);font-size:.75rem;font-weight:600;cursor:pointer;">📊 查看分析</button>
+                        <button onclick="event.stopPropagation(); openEditPortfolioModal('${key}')" style="padding:8px 12px;border-radius:8px;border:1.5px solid var(--primary);background:none;color:var(--primary);font-size:.75rem;font-weight:600;cursor:pointer;">✏️</button>
                         <button onclick="event.stopPropagation(); removePortfolioFromPage('${key}')" style="padding:8px 12px;border-radius:8px;border:1.5px solid var(--border);background:none;color:var(--rust);font-size:.75rem;font-weight:600;cursor:pointer;">🗑️</button>
                     </div>
                 </div>
@@ -2423,7 +2428,7 @@ function renderPortfolio() {
     const summaryEl = document.getElementById('portfolioSummary');
     const el = document.getElementById('portfolio');
 
-    const items = Object.values(portfolio);
+    const items = Object.entries(portfolio);
     if (items.length === 0) {
         summaryEl.innerHTML = '';
         el.innerHTML = '<div class="wl-empty">尚無投資項目<br>分析卡片後點擊「💼 加投資組合」</div>';
@@ -2440,7 +2445,7 @@ function renderPortfolio() {
         是否有歷史數據: allHistories.length > 0
     });
 
-    items.forEach(item => {
+    items.forEach(([, item]) => {
         const costResult = calculateTotalCost(item.buy_price, item.is_box, {
             include_fee: item.include_fee,
             include_shipping: item.include_shipping,
@@ -2541,7 +2546,7 @@ function renderPortfolio() {
         </div>
     `;
 
-    el.innerHTML = items.map(item => {
+    el.innerHTML = items.map(([key, item]) => {
         const costResult = calculateTotalCost(item.buy_price, item.is_box, {
             include_fee: item.include_fee,
             include_shipping: item.include_shipping,
@@ -2604,7 +2609,7 @@ function renderPortfolio() {
         if (currentPrice !== null && roi !== null) {
             const profit = currentPrice - cost;
             return `
-                <div class="pf-item ${roiClass}" onclick="loadPortfolioCard('${item.card_id}', '${item.condition}')">
+                <div class="pf-item ${roiClass}" onclick="loadPortfolioCardByKey('${key}')">
                     <img src="${item.card_image || 'https://via.placeholder.com/40x50'}" alt="${item.card_name}" />
                     <div class="pf-info">
                         <div class="pf-name">${item.card_name}</div>
@@ -2619,7 +2624,7 @@ function renderPortfolio() {
             `;
         } else {
             return `
-                <div class="pf-item" onclick="loadPortfolioCard('${item.card_id}', '${item.condition}')">
+                <div class="pf-item" onclick="loadPortfolioCardByKey('${key}')">
                     <img src="${item.card_image || 'https://via.placeholder.com/40x50'}" alt="${item.card_name}" />
                     <div class="pf-info">
                         <div class="pf-name">${item.card_name}</div>
@@ -2674,17 +2679,26 @@ function calculateTotalCost(buyPrice, isBox, options = {}) {
     };
 }
 
-async function loadPortfolioCard(cardId, condition) {
-    const url = `https://snkrdunk.com/en/trading-cards/${cardId}`;
+async function loadPortfolioCardByKey(key) {
+    const portfolio = loadPortfolio();
+    const item = portfolio[key];
+    if (!item) {
+        showToast('找不到此投資項目');
+        return;
+    }
+
+    const url = `https://snkrdunk.com/en/trading-cards/${item.card_id}`;
     document.getElementById('urlInput').value = url;
     await fetchAll();
 
-    // 設置當前投資組合項目
-    const key = getPortfolioKey(cardId, condition);
+    // 設置當前投資組合項目（使用傳入的唯一 key）
     currentPortfolioKey = key;
 
     // 顯示 ROI 分析
     renderROI();
+
+    // 切換到分析頁面
+    switchView('analyze');
 
     // 滾動到 ROI 區域
     setTimeout(() => {
@@ -2698,12 +2712,20 @@ function openAddPortfolioModal() {
     const modal = document.getElementById('portfolioModal');
     const info = rawData.info || {};
 
+    // 清空編輯模式
+    document.getElementById('modalEditingKey').value = '';
+    document.getElementById('modalEditCardId').value = '';
+    document.getElementById('modalEditCardImage').value = '';
+    document.getElementById('modalEditIsBox').value = '';
+    document.getElementById('modalTitle').textContent = '💼 加入投資組合';
+
     // 填入卡片名稱
     document.getElementById('modalCardName').value = info.title || 'Unknown Card';
 
     // 填入條件選項
     const conditionSelect = document.getElementById('modalCondition');
     conditionSelect.innerHTML = '';
+    conditionSelect.disabled = false;
 
     const isBox = (rawData.condition_prices || []).length === 0 &&
                   allHistories.some(h => h.size && h.size.includes('box'));
@@ -2726,7 +2748,8 @@ function openAddPortfolioModal() {
     const defaultShipping = isBox ? 26 : 19;
     document.getElementById('modalShippingAmount').value = defaultShipping;
 
-    // 重置勾選狀態
+    // 重置價格與勾選狀態
+    document.getElementById('modalBuyPrice').value = '';
     document.getElementById('modalIncludeFee').checked = true;
     document.getElementById('modalIncludeShipping').checked = true;
     document.getElementById('modalIncludeTariff').checked = true;
@@ -2738,9 +2761,52 @@ function openAddPortfolioModal() {
     modal.classList.add('show');
 }
 
+function openEditPortfolioModal(key) {
+    const portfolio = loadPortfolio();
+    const item = portfolio[key];
+    if (!item) {
+        showToast('找不到此投資項目');
+        return;
+    }
+
+    const modal = document.getElementById('portfolioModal');
+
+    // 設定編輯模式
+    document.getElementById('modalEditingKey').value = key;
+    document.getElementById('modalEditCardId').value = item.card_id;
+    document.getElementById('modalEditCardImage').value = item.card_image || '';
+    document.getElementById('modalEditIsBox').value = item.is_box ? '1' : '';
+    document.getElementById('modalTitle').textContent = '✏️ 編輯投資項目';
+
+    // 填入卡片名稱
+    document.getElementById('modalCardName').value = item.card_name || 'Unknown Card';
+
+    // 填入條件（編輯模式鎖定等級，不可更改）
+    const conditionSelect = document.getElementById('modalCondition');
+    conditionSelect.innerHTML = `<option value="${item.condition}">${item.condition}</option>`;
+    conditionSelect.disabled = true;
+
+    // 填入購入價格
+    document.getElementById('modalBuyPrice').value = item.buy_price;
+
+    // 填入費用選項
+    document.getElementById('modalIncludeFee').checked = item.include_fee !== false;
+    document.getElementById('modalIncludeShipping').checked = item.include_shipping !== false;
+    document.getElementById('modalIncludeTariff').checked = item.include_tariff !== false;
+    document.getElementById('modalShippingAmount').value = item.shipping_amount || 19;
+
+    // 更新成本預覽
+    updateModalCostPreview();
+
+    // 顯示對話框
+    modal.classList.add('show');
+}
+
 function closePortfolioModal() {
     document.getElementById('portfolioModal').classList.remove('show');
     document.getElementById('modalBuyPrice').value = '';
+    document.getElementById('modalEditingKey').value = '';
+    document.getElementById('modalCondition').disabled = false;
 }
 
 function updateModalCostPreview() {
@@ -2781,14 +2847,24 @@ function savePortfolioItem() {
     }
 
     const portfolio = loadPortfolio();
-    const info = rawData.info || {};
     const condition = document.getElementById('modalCondition').value;
-    const cardId = extractCardId(currentUrl);
+    const editingKey = document.getElementById('modalEditingKey').value;
 
-    const isBox = (rawData.condition_prices || []).length === 0 &&
-                  allHistories.some(h => h.size && h.size.includes('box'));
-
-    const key = getPortfolioKey(cardId, condition);
+    // 編輯模式用 hidden input，新增模式用 rawData
+    let cardId, cardName, cardImage, isBox;
+    if (editingKey) {
+        cardId = document.getElementById('modalEditCardId').value;
+        cardName = document.getElementById('modalCardName').value;
+        cardImage = document.getElementById('modalEditCardImage').value;
+        isBox = document.getElementById('modalEditIsBox').value === '1';
+    } else {
+        const info = rawData.info || {};
+        cardId = extractCardId(currentUrl);
+        cardName = info.title || 'Unknown Card';
+        cardImage = info.thumbnail_url || '';
+        isBox = (rawData.condition_prices || []).length === 0 &&
+                allHistories.some(h => h.size && h.size.includes('box'));
+    }
 
     // 取得費用選項
     const includeFee = document.getElementById('modalIncludeFee').checked;
@@ -2796,52 +2872,47 @@ function savePortfolioItem() {
     const includeTariff = document.getElementById('modalIncludeTariff').checked;
     const shippingAmount = parseFloat(document.getElementById('modalShippingAmount').value) || 0;
 
-    portfolio[key] = {
+    const itemData = {
         card_id: cardId,
-        card_name: info.title || 'Unknown Card',
-        card_image: info.thumbnail_url || '',
+        card_name: cardName,
+        card_image: cardImage,
         condition: condition,
         buy_price: buyPrice,
         is_box: isBox,
-        added_at: new Date().toISOString(),
-        // 費用選項
+        added_at: editingKey ? (portfolio[editingKey]?.added_at || new Date().toISOString()) : new Date().toISOString(),
         include_fee: includeFee,
         include_shipping: includeShipping,
         include_tariff: includeTariff,
         shipping_amount: shippingAmount
     };
 
-    savePortfolio(portfolio);
-    renderPortfolio();
-    closePortfolioModal();
-    showToast('✅ 已加入投資組合');
+    let key;
+    if (editingKey) {
+        // 編輯模式：更新現有條目
+        key = editingKey;
+        portfolio[key] = itemData;
+        savePortfolio(portfolio);
+        renderPortfolio();
+        closePortfolioModal();
+        showToast('✅ 已更新投資項目');
+    } else {
+        // 新增模式：用 timestamp 生成唯一 key
+        key = `${cardId}_${condition.replace(/\s+/g, '_')}_${Date.now()}`;
+        portfolio[key] = itemData;
+        savePortfolio(portfolio);
+        renderPortfolio();
+        closePortfolioModal();
+        showToast('✅ 已加入投資組合');
+    }
 
     // 設置當前項目並顯示 ROI
     currentPortfolioKey = key;
     renderROI();
-}
 
-function editPortfolioItem() {
-    if (!currentPortfolioKey) return;
-
-    const portfolio = loadPortfolio();
-    const item = portfolio[currentPortfolioKey];
-    if (!item) return;
-
-    const newPrice = prompt('輸入新的購入價格 (USD):', item.buy_price);
-    if (newPrice === null) return;
-
-    const price = parseFloat(newPrice);
-    if (isNaN(price) || price <= 0) {
-        alert('請輸入有效的價格');
-        return;
+    // 如果在投資組合頁面，重新渲染
+    if (currentView === 'portfolio') {
+        renderPortfolioPage();
     }
-
-    item.buy_price = price;
-    savePortfolio(portfolio);
-    renderPortfolio();
-    renderROI();
-    showToast('✅ 已更新購入價格');
 }
 
 function removePortfolioItem() {
