@@ -3413,31 +3413,52 @@ function getConditionBaseline(condition) {
 }
 
 /**
- * 🧹 強化版捆綁交易偵測 — IQR + 局部視窗雙重驗證
- * 策略：先用 IQR 找出全域離群值，再用局部視窗嘗試所有可能倍數 (2-20x) 找最佳修正
+ * 🧹 強化版捆綁交易偵測 — 基準價錨點 + IQR + 局部視窗三重驗證
+ * 策略：
+ *   1. 若有 conditionBaseline（掛牌最低價），以此為錨點估算單卡價格，
+ *      任何超過錨點 2 倍以上的價格都嘗試倍數修正
+ *   2. 若無 baseline，退回 IQR + 局部視窗方式
  */
 function cleanForTrend(prices, histories = [], conditionBaseline = null) {
     if (prices.length < 5) return [...prices];
 
-    // Step 1: IQR 離群值檢測 (找出可疑的多張捆綁)
+    // Step 1: 計算統計量
     const sorted = [...prices].sort((a, b) => a - b);
     const q1 = sorted[Math.floor(sorted.length * 0.25)];
     const q3 = sorted[Math.floor(sorted.length * 0.75)];
     const iqr = q3 - q1;
-    const upperBound = q3 + 1.5 * iqr; // IQR 標準上界
+    const iqrUpperBound = q3 + 1.5 * iqr;
     const globalMedian = sorted[Math.floor(sorted.length / 2)];
 
-    console.log(`📊 IQR 分析: Q1=$${q1}, Q3=$${q3}, IQR=$${iqr}, 上界=$${upperBound}, 中位數=$${globalMedian}`);
+    // Step 2: 決定錨點價格 (anchor) — 最可信的單卡價格參考
+    // 優先用 conditionBaseline，否則用低價群集的中位數
+    let anchor = null;
+    if (conditionBaseline && conditionBaseline > 0) {
+        anchor = conditionBaseline;
+    } else {
+        // 無 baseline 時用 IQR 低於上界的價格中位數
+        const normalPrices = sorted.filter(p => p <= iqrUpperBound);
+        if (normalPrices.length > 0) {
+            anchor = normalPrices[Math.floor(normalPrices.length / 2)];
+        } else {
+            anchor = globalMedian;
+        }
+    }
 
-    // Step 2: 對每個價格進行雙重驗證
-    const radius = 15; // 加大視窗半徑，確保有足夠參考
+    // 離群偵測門檻：超過錨點的 1.8 倍就視為可疑
+    const suspectThreshold = anchor * 1.8;
+
+    console.log(`📊 cleanForTrend: anchor=$${anchor}, baseline=$${conditionBaseline}, median=$${globalMedian}, suspectThreshold=$${suspectThreshold.toFixed(0)}, IQR上界=$${iqrUpperBound.toFixed(0)}`);
+
+    // Step 3: 對每個價格進行驗證
+    const radius = 15;
     let totalCorrections = 0;
 
     const result = prices.map((p, i) => {
         // 如果價格在合理範圍內，直接保留
-        if (p <= upperBound) return p;
+        if (p <= suspectThreshold) return p;
 
-        // 收集局部鄰近價格
+        // 收集局部鄰近價格（只取正常範圍內的作為參考）
         const neighbors = [];
         for (let j = Math.max(0, i - radius); j < Math.min(prices.length, i + radius + 1); j++) {
             if (j !== i) neighbors.push(prices[j]);
@@ -3445,10 +3466,13 @@ function cleanForTrend(prices, histories = [], conditionBaseline = null) {
 
         if (neighbors.length < 3) return p;
 
-        neighbors.sort((a, b) => a - b);
-        const localMedian = neighbors[Math.floor(neighbors.length / 2)];
+        // 用錨點附近的鄰居計算局部中位數（過濾掉其他可疑值）
+        const normalNeighbors = neighbors.filter(n => n <= suspectThreshold);
+        const localMedian = normalNeighbors.length >= 2
+            ? normalNeighbors.sort((a, b) => a - b)[Math.floor(normalNeighbors.length / 2)]
+            : anchor;
 
-        // Step 3: 嘗試所有可能的倍數 (2x-20x)，找出最佳修正
+        // Step 4: 嘗試所有可能的倍數 (2x-20x)，找出最佳修正
         let bestCorrection = p;
         let bestScore = Infinity;
         let bestMult = 1;
@@ -3456,13 +3480,13 @@ function cleanForTrend(prices, histories = [], conditionBaseline = null) {
         for (let mult = 2; mult <= 20; mult++) {
             const corrected = p / mult;
 
-            // 評分：同時考慮全域中位數和局部中位數的距離
-            const globalDist = Math.abs(corrected - globalMedian) / globalMedian;
+            // 評分：與錨點和局部中位數的距離
+            const anchorDist = Math.abs(corrected - anchor) / anchor;
             const localDist = Math.abs(corrected - localMedian) / localMedian;
-            const score = globalDist * 0.4 + localDist * 0.6; // 局部權重較高
+            const score = anchorDist * 0.5 + localDist * 0.5;
 
-            // 只接受修正後價格在合理範圍內的倍數 (距離中位數 ±40% 以內)
-            if (score < bestScore && globalDist < 0.4 && localDist < 0.4) {
+            // 修正後價格需在錨點 ±50% 範圍內
+            if (score < bestScore && anchorDist < 0.5 && localDist < 0.5) {
                 bestCorrection = corrected;
                 bestScore = score;
                 bestMult = mult;
@@ -3471,11 +3495,13 @@ function cleanForTrend(prices, histories = [], conditionBaseline = null) {
 
         if (bestMult > 1) {
             const rounded = Math.round(bestCorrection);
-            console.log(`✅ 修正捆綁交易: $${p} → $${rounded} (${bestMult}x, 局部中位=$${localMedian}, 全域中位=$${globalMedian})`);
+            console.log(`✅ 修正捆綁交易: $${p} → $${rounded} (${bestMult}x, anchor=$${anchor}, local=$${localMedian})`);
             totalCorrections++;
             return rounded;
         }
 
+        // 無法用倍數修正但明顯超高 → 標記但保留原值（不能亂改）
+        console.log(`⚠️ 可疑高價但無法倍數修正: $${p} (anchor=$${anchor})`);
         return p;
     });
 
