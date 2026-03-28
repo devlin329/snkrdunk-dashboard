@@ -817,6 +817,281 @@
             border: 1px solid var(--border);
         }
 
+        /* ======= PORTFOLIO PAGE ======= */
+        .pv-header {
+            margin-bottom: 24px;
+        }
+        .pv-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .pv-title-row h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .pv-refresh-btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 2px solid var(--border);
+            background: var(--card);
+            color: var(--text-sec);
+            font-size: .78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .2s;
+        }
+        .pv-refresh-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-1px);
+        }
+        .pv-summary-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+        .pv-stat {
+            background: var(--card);
+            border-radius: 14px;
+            padding: 18px 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 10px var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        .pv-stat::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            border-radius: 14px 14px 0 0;
+        }
+        .pv-stat.stat-cost::before { background: var(--primary); }
+        .pv-stat.stat-value::before { background: var(--sage); }
+        .pv-stat.stat-profit::before { background: var(--gold); }
+        .pv-stat.stat-roi::before { background: var(--plum); }
+        .pv-stat-icon {
+            font-size: 1.4rem;
+            margin-bottom: 6px;
+        }
+        .pv-stat-label {
+            font-size: .7rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 4px;
+        }
+        .pv-stat-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .pv-stat-value.positive { color: var(--sage); }
+        .pv-stat-value.negative { color: var(--rust); }
+
+        .pv-loader {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+        .pv-loader p {
+            margin-top: 14px;
+            font-size: .85rem;
+        }
+        .pv-empty {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        .pv-empty-icon {
+            font-size: 3.5rem;
+            margin-bottom: 16px;
+            opacity: .6;
+        }
+        .pv-empty h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-sec);
+            margin-bottom: 8px;
+        }
+        .pv-empty p {
+            font-size: .82rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .pv-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .pv-card {
+            background: var(--card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 2px 12px var(--shadow);
+            transition: all .3s cubic-bezier(.4,0,.2,1);
+            cursor: pointer;
+            position: relative;
+        }
+        .pv-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(139,111,78,0.15);
+            border-color: var(--primary-light);
+        }
+        .pv-card-top {
+            display: flex;
+            gap: 14px;
+            padding: 16px 16px 12px;
+        }
+        .pv-card-img {
+            width: 72px;
+            height: 96px;
+            object-fit: cover;
+            border-radius: 10px;
+            background: var(--bg-warm);
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .pv-card-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .pv-card-name {
+            font-size: .82rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.3;
+        }
+        .pv-card-condition {
+            display: inline-block;
+            font-size: .65rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: rgba(192,120,76,0.1);
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        .pv-card-prices {
+            display: flex;
+            gap: 16px;
+        }
+        .pv-card-price-col {
+            display: flex;
+            flex-direction: column;
+        }
+        .pv-card-price-label {
+            font-size: .6rem;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+        .pv-card-price-val {
+            font-size: .9rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .pv-card-price-val.current {
+            color: var(--sage);
+        }
+        .pv-card-price-val.loading {
+            color: var(--muted);
+            font-size: .75rem;
+            animation: pvPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pvPulse {
+            0%, 100% { opacity: .4; }
+            50% { opacity: 1; }
+        }
+
+        .pv-card-bottom {
+            padding: 0 16px 14px;
+        }
+        .pv-card-roi-bar {
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: .88rem;
+            transition: background .3s;
+        }
+        .pv-card-roi-bar.profit {
+            background: linear-gradient(135deg, rgba(122,145,119,0.12), rgba(122,145,119,0.22));
+            color: var(--sage);
+        }
+        .pv-card-roi-bar.loss {
+            background: linear-gradient(135deg, rgba(184,92,58,0.1), rgba(184,92,58,0.2));
+            color: var(--rust);
+        }
+        .pv-card-roi-bar.neutral {
+            background: var(--bg-warm);
+            color: var(--muted);
+        }
+        .pv-card-roi-bar .roi-icon {
+            font-size: 1.1rem;
+        }
+        .pv-card-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            box-shadow: 0 0 6px;
+        }
+        .pv-card-badge.profit { background: var(--sage); box-shadow: 0 0 8px rgba(122,145,119,0.5); }
+        .pv-card-badge.loss { background: var(--rust); box-shadow: 0 0 8px rgba(184,92,58,0.5); }
+
+        .pv-card-details {
+            display: none;
+            padding: 0 16px 14px;
+            border-top: 1px solid var(--border);
+            margin-top: 0;
+        }
+        .pv-card.expanded .pv-card-details {
+            display: block;
+            animation: pvSlideDown .3s ease;
+        }
+        @keyframes pvSlideDown {
+            from { opacity: 0; max-height: 0; }
+            to { opacity: 1; max-height: 300px; }
+        }
+        .pv-detail-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: .74rem;
+            padding: 6px 0;
+            border-bottom: 1px dashed rgba(139,111,78,0.08);
+        }
+        .pv-detail-row:last-child { border-bottom: none; }
+        .pv-detail-label { color: var(--text-sec); }
+        .pv-detail-val { font-weight: 600; color: var(--text); }
+        .pv-detail-val.green { color: var(--sage); }
+        .pv-detail-val.red { color: var(--rust); }
+        .pv-card-expand-hint {
+            text-align: center;
+            font-size: .65rem;
+            color: var(--muted);
+            padding: 4px 0 2px;
+            transition: .2s;
+        }
+        .pv-card.expanded .pv-card-expand-hint { display: none; }
+
         @media (max-width: 768px) {
             .page-container {
                 flex-direction: column;
@@ -1036,21 +1311,47 @@
                 white-space: nowrap;
                 flex-shrink: 0;
             }
+            /* Portfolio page mobile */
+            .pv-summary-cards {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .pv-stat {
+                padding: 14px 12px;
+                border-radius: 12px;
+            }
+            .pv-stat-value {
+                font-size: 1rem;
+            }
+            .pv-title-row h2 {
+                font-size: 1.05rem;
+            }
+            .pv-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .pv-card-img {
+                width: 60px;
+                height: 80px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="page-container">
-    <!-- ======= WATCHLIST SIDEBAR ======= -->
+    <!-- ======= SIDEBAR ======= -->
     <aside class="sidebar" id="sidebar">
-        <h2>📌 關注清單</h2>
-        <div id="watchlist"></div>
-
         <!-- 投資組合 -->
-        <div class="portfolio-section">
-            <h2>💼 我的投資組合</h2>
+        <div class="portfolio-section" style="margin-top:0; padding-top:0; border-top:none;">
+            <h2 style="cursor:pointer;" onclick="switchView('portfolio')">💼 我的投資組合 <span style="font-size:.65rem;color:var(--primary);font-weight:500;">查看全部 →</span></h2>
             <div id="portfolioSummary"></div>
             <div id="portfolio"></div>
+        </div>
+
+        <!-- 關注清單 -->
+        <div class="watchlist-section" style="margin-top:20px; padding-top:16px; border-top:2px solid var(--border);">
+            <h2>📌 關注清單</h2>
+            <div id="watchlist"></div>
         </div>
     </aside>
 
@@ -1069,6 +1370,7 @@
             <button class="nav-tab active" onclick="switchView('analyze')">📊 分析卡片</button>
             <button class="nav-tab" onclick="switchView('browse')">🗂️ 瀏覽系列</button>
             <button class="nav-tab" onclick="switchView('search')">🔍 特別搜尋</button>
+            <button class="nav-tab" onclick="switchView('portfolio')">💼 投資組合</button>
         </div>
 
         <div class="container">
@@ -1253,6 +1555,31 @@
             <div class="browse-grid" id="searchGrid"></div>
         </div>
 
+        <!-- Portfolio View -->
+        <div class="browse-view" id="portfolioView">
+            <div class="pv-header">
+                <div class="pv-title-row">
+                    <h2>💼 我的投資組合</h2>
+                    <button class="pv-refresh-btn" onclick="refreshPortfolioPage()" title="重新載入價格">🔄 更新市價</button>
+                </div>
+                <div class="pv-summary-cards" id="pvSummaryCards">
+                    <!-- JS 渲染 -->
+                </div>
+            </div>
+            <div class="pv-loader" id="pvLoader" style="display:none;">
+                <div class="spinner"></div>
+                <p>正在載入最新市價...</p>
+            </div>
+            <div class="pv-empty" id="pvEmpty" style="display:none;">
+                <div class="pv-empty-icon">💼</div>
+                <h3>尚無投資項目</h3>
+                <p>前往「📊 分析卡片」分析後，點擊「💼 加投資組合」開始追蹤</p>
+            </div>
+            <div class="pv-grid" id="pvGrid">
+                <!-- JS 渲染卡片 -->
+            </div>
+        </div>
+
     </div>
     </div><!-- End page-container -->
 
@@ -1410,7 +1737,7 @@ function switchView(view) {
     currentView = view;
 
     // 切換 Tab 樣式
-    const tabMap = { analyze: '分析', browse: '瀏覽', search: '搜尋' };
+    const tabMap = { analyze: '分析', browse: '瀏覽', search: '搜尋', portfolio: '投資' };
     document.querySelectorAll('.nav-tab').forEach(tab => {
         tab.classList.toggle('active', tab.textContent.includes(tabMap[view] || ''));
     });
@@ -1419,10 +1746,12 @@ function switchView(view) {
     const container = document.querySelector('.container');
     const browseView = document.getElementById('browseView');
     const searchView = document.getElementById('searchView');
+    const portfolioView = document.getElementById('portfolioView');
 
     container.style.display = 'none';
     browseView.classList.remove('active');
     searchView.classList.remove('active');
+    portfolioView.classList.remove('active');
 
     if (view === 'analyze') {
         container.style.display = 'block';
@@ -1437,8 +1766,10 @@ function switchView(view) {
         }
     } else if (view === 'search') {
         searchView.classList.add('active');
-        // 聚焦輸入框
         setTimeout(() => document.getElementById('searchKeyword').focus(), 100);
+    } else if (view === 'portfolio') {
+        portfolioView.classList.add('active');
+        renderPortfolioPage();
     }
 }
 
@@ -1791,6 +2122,197 @@ function removeFromWatchlist(cardId) {
     list = list.filter(x => x.cardId !== cardId);
     saveWatchlist(list);
     renderWatchlist();
+}
+
+// ======= PORTFOLIO PAGE (專屬頁面) =======
+function renderPortfolioPage() {
+    const portfolio = loadPortfolio();
+    const items = Object.entries(portfolio);
+    const summaryEl = document.getElementById('pvSummaryCards');
+    const gridEl = document.getElementById('pvGrid');
+    const emptyEl = document.getElementById('pvEmpty');
+
+    if (items.length === 0) {
+        summaryEl.innerHTML = '';
+        gridEl.innerHTML = '';
+        emptyEl.style.display = 'block';
+        return;
+    }
+    emptyEl.style.display = 'none';
+
+    // 計算總覽數據
+    let totalCost = 0, totalValue = 0, loadedCount = 0;
+
+    const cardData = items.map(([key, item]) => {
+        const costResult = calculateTotalCost(item.buy_price, item.is_box, {
+            include_fee: item.include_fee,
+            include_shipping: item.include_shipping,
+            include_tariff: item.include_tariff,
+            shipping_amount: item.shipping_amount
+        });
+        const cost = costResult.total;
+        totalCost += cost;
+
+        let currentPrice = null;
+        const cacheKey = getPortfolioKey(item.card_id, item.condition);
+        const cached = portfolioPriceCache[cacheKey];
+
+        if (cached && (Date.now() - cached.timestamp < 10 * 60 * 1000)) {
+            currentPrice = cached.price;
+            loadedCount++;
+        }
+
+        const value = currentPrice !== null ? currentPrice : cost;
+        totalValue += value;
+
+        const profit = currentPrice !== null ? (currentPrice - cost) : null;
+        const roi = profit !== null ? (profit / cost * 100) : null;
+
+        return { key, item, cost, costResult, currentPrice, profit, roi };
+    });
+
+    const totalProfit = totalValue - totalCost;
+    const totalROI = totalCost > 0 ? (totalProfit / totalCost * 100) : 0;
+    const roiSign = totalROI >= 0 ? '+' : '';
+    const profitSign = totalProfit >= 0 ? '+' : '';
+
+    // 渲染總覽卡片
+    summaryEl.innerHTML = `
+        <div class="pv-stat stat-cost">
+            <div class="pv-stat-icon">💰</div>
+            <div class="pv-stat-label">總投資成本</div>
+            <div class="pv-stat-value">$${totalCost.toFixed(2)}</div>
+        </div>
+        <div class="pv-stat stat-value">
+            <div class="pv-stat-icon">📊</div>
+            <div class="pv-stat-label">當前估值</div>
+            <div class="pv-stat-value">${loadedCount > 0 ? '$' + totalValue.toFixed(2) : '載入中...'}</div>
+        </div>
+        <div class="pv-stat stat-profit">
+            <div class="pv-stat-icon">${totalProfit >= 0 ? '📈' : '📉'}</div>
+            <div class="pv-stat-label">未實現損益</div>
+            <div class="pv-stat-value ${totalProfit >= 0 ? 'positive' : 'negative'}">
+                ${loadedCount > 0 ? profitSign + '$' + totalProfit.toFixed(2) : '--'}
+            </div>
+        </div>
+        <div class="pv-stat stat-roi">
+            <div class="pv-stat-icon">🎯</div>
+            <div class="pv-stat-label">投資報酬率</div>
+            <div class="pv-stat-value ${totalROI >= 0 ? 'positive' : 'negative'}">
+                ${loadedCount > 0 ? roiSign + totalROI.toFixed(1) + '%' : '--'}
+            </div>
+        </div>
+    `;
+
+    // 排序：有價格的在前，ROI 高的在前
+    cardData.sort((a, b) => {
+        if (a.roi !== null && b.roi === null) return -1;
+        if (a.roi === null && b.roi !== null) return 1;
+        if (a.roi !== null && b.roi !== null) return b.roi - a.roi;
+        return 0;
+    });
+
+    // 渲染卡片
+    gridEl.innerHTML = cardData.map(({ key, item, cost, costResult, currentPrice, profit, roi }) => {
+        const roiClass = roi !== null ? (roi >= 0 ? 'profit' : 'loss') : 'neutral';
+        const roiText = roi !== null
+            ? `<span class="roi-icon">${roi >= 0 ? '📈' : '📉'}</span> ${roi >= 0 ? '+' : ''}${roi.toFixed(1)}% (${profit >= 0 ? '+' : ''}$${profit.toFixed(2)})`
+            : '<span class="roi-icon">⏳</span> 載入市價中...';
+
+        const priceDisplay = currentPrice !== null
+            ? `$${currentPrice.toFixed(2)}`
+            : '<span class="loading">載入中...</span>';
+
+        const priceClass = currentPrice !== null ? 'current' : 'loading';
+
+        const sellProceeds = currentPrice !== null ? currentPrice * 0.965 : null;
+        const breakEven = cost / 0.965;
+
+        const breakdown = costResult.breakdown;
+        const addedDate = new Date(item.added_at).toLocaleDateString('zh-TW');
+
+        return `
+            <div class="pv-card" onclick="this.classList.toggle('expanded')">
+                ${roi !== null ? `<div class="pv-card-badge ${roiClass}"></div>` : ''}
+                <div class="pv-card-top">
+                    <img class="pv-card-img" src="${item.card_image || ''}" alt="${item.card_name}" onerror="this.style.background='var(--bg-warm)'" />
+                    <div class="pv-card-info">
+                        <div class="pv-card-name">${item.card_name}</div>
+                        <div class="pv-card-condition">${item.condition}</div>
+                        <div class="pv-card-prices">
+                            <div class="pv-card-price-col">
+                                <span class="pv-card-price-label">成本</span>
+                                <span class="pv-card-price-val">$${cost.toFixed(2)}</span>
+                            </div>
+                            <div class="pv-card-price-col">
+                                <span class="pv-card-price-label">市價</span>
+                                <span class="pv-card-price-val ${priceClass}">${priceDisplay}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pv-card-bottom">
+                    <div class="pv-card-roi-bar ${roiClass}">
+                        ${roiText}
+                    </div>
+                </div>
+                <div class="pv-card-expand-hint">點擊展開詳情 ▾</div>
+                <div class="pv-card-details">
+                    <div class="pv-detail-row">
+                        <span class="pv-detail-label">購入價格</span>
+                        <span class="pv-detail-val">$${item.buy_price.toFixed(2)}</span>
+                    </div>
+                    ${breakdown.fee > 0 ? `<div class="pv-detail-row"><span class="pv-detail-label">手續費 3.5%</span><span class="pv-detail-val">$${breakdown.fee.toFixed(2)}</span></div>` : ''}
+                    ${breakdown.shipping > 0 ? `<div class="pv-detail-row"><span class="pv-detail-label">運費</span><span class="pv-detail-val">$${breakdown.shipping.toFixed(2)}</span></div>` : ''}
+                    ${breakdown.tariff > 0 ? `<div class="pv-detail-row"><span class="pv-detail-label">關稅 5%</span><span class="pv-detail-val">$${breakdown.tariff.toFixed(2)}</span></div>` : ''}
+                    <div class="pv-detail-row" style="border-top:1px solid var(--border);padding-top:8px;font-weight:700;">
+                        <span class="pv-detail-label">總成本</span>
+                        <span class="pv-detail-val">$${cost.toFixed(2)}</span>
+                    </div>
+                    ${sellProceeds !== null ? `
+                    <div class="pv-detail-row" style="margin-top:8px;">
+                        <span class="pv-detail-label">賣出可得 (-3.5%)</span>
+                        <span class="pv-detail-val">$${sellProceeds.toFixed(2)}</span>
+                    </div>` : ''}
+                    <div class="pv-detail-row">
+                        <span class="pv-detail-label">回本價</span>
+                        <span class="pv-detail-val">$${breakEven.toFixed(2)}</span>
+                    </div>
+                    <div class="pv-detail-row">
+                        <span class="pv-detail-label">加入日期</span>
+                        <span class="pv-detail-val">${addedDate}</span>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:10px;">
+                        <button onclick="event.stopPropagation(); loadPortfolioCard('${item.card_id}', '${item.condition}')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--primary);background:none;color:var(--primary);font-size:.75rem;font-weight:600;cursor:pointer;">📊 查看分析</button>
+                        <button onclick="event.stopPropagation(); removePortfolioFromPage('${key}')" style="padding:8px 12px;border-radius:8px;border:1.5px solid var(--border);background:none;color:var(--rust);font-size:.75rem;font-weight:600;cursor:pointer;">🗑️</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function removePortfolioFromPage(key) {
+    if (!confirm('確定要移除此投資項目？')) return;
+    const portfolio = loadPortfolio();
+    delete portfolio[key];
+    savePortfolio(portfolio);
+    renderPortfolio(); // 更新側邊欄
+    renderPortfolioPage(); // 更新主頁面
+    showToast('✅ 已移除投資項目');
+}
+
+async function refreshPortfolioPage() {
+    const loader = document.getElementById('pvLoader');
+    loader.style.display = 'block';
+
+    // 清除快取強制重新載入
+    portfolioPriceCache = {};
+    await loadAllPortfolioPrices();
+
+    loader.style.display = 'none';
+    renderPortfolioPage();
+    showToast('✅ 市價已更新');
 }
 
 // ======= PORTFOLIO FUNCTIONS =======
