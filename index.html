@@ -1703,11 +1703,7 @@
         <div class="browse-view" id="wishlistView">
             <div class="pv-header">
                 <h2>🎯 思考收藏清單</h2>
-                <p style="color:var(--muted);font-size:.78rem;margin:4px 0 10px;line-height:1.4;">精選高 CP 值海賊王卡牌，五週年前的佈局參考。點擊卡片可前往 Snkrdunk 查看詳情。</p>
-            </div>
-            <div class="wl-loader" id="wlLoader" style="display:none;">
-                <div class="spinner"></div>
-                <p>正在搜尋卡牌圖片...</p>
+                <p style="color:var(--muted);font-size:.78rem;margin:4px 0 10px;line-height:1.4;">Snkrdunk 熱門 Top 50 卡牌，依同角色分類整理。點擊卡片前往 Snkrdunk，點圖片可放大預覽。</p>
             </div>
             <div class="wl-grid" id="wlGrid"></div>
         </div>
@@ -4349,53 +4345,101 @@ function generateShareQRCode() {
 // ======= WISHLIST (思考收藏) =======
 const WISHLIST_DATA = [
     {
-        section: '🔥 第一梯隊 — 五週年核心標的',
+        section: '🏴‍☠️ Monkey D. Luffy（24張）',
         cards: [
-            { number: 'OP05-119', name: 'Luffy (Gear 5) SEC Parallel', reason: '五檔魯夫的指標卡，雖然量大但需求永遠在。五週年時，初代五檔卡會有情懷加成。' },
-            { number: 'OP01-016', name: 'Nami (Parallel Rare)', reason: 'OP-01 的元祖娜美，是所有娜美卡收藏者的起點。隨第一彈絕版，這張卡是硬通貨。' },
-            { number: 'OP02-121', name: 'Kuzan SEC Parallel', reason: '青雉的這張卡藝術風格極佳，且作為海軍大將的核心卡，收藏價值與競技歷史並存。' },
-            { number: 'OP06-086', name: 'Gecko Moria (Leader Alt)', reason: '莫利亞的隊長異圖畫風極具張力，是許多暗黑系藏家的首選。' },
-            { number: 'ST01-001', name: 'Luffy (25th Anniversary Alt)', reason: '25 週年紀念版的紅色魯夫隊長。帶有「週年標誌」的卡，在五週年時最容易被想起。' },
-            { number: 'OP05-060', name: 'Eustass "Captain" Kid SEC Parallel', reason: '磁氣魔人狀態，畫風非常霸氣，目前價格被低估，適合長線埋伏。' },
+            { id: 686000, number: 'P-110', name: 'Monkey.D.Luffy P [P-110] (ONE PIECE DAY\'25)', price: 'US $66', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20250828112538-0.webp?size=m' },
+            { id: 315324, number: 'ST10-006', name: 'Monkey.D.Luffy SR [ST10-006] (ONE PIECE DAY\'24)', price: 'US $63', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20240813013643-0.webp?size=m' },
+            { id: 706813, number: 'ST21-014', name: 'Monkey.D.Luffy SR [ST21-014] (Weekly Shonen Jump)', price: 'US $76', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20251005093907-0.webp?size=m' },
+            { id: 135440, number: 'ST01-012', name: 'Monkey D Luffy SR [ST01-012] (Awakening of the New Era)', price: 'US $22', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20230829094840-0.webp?size=m' },
+            { id: 167350, number: 'P-043', name: 'Monkey D Luffy P [P-043] (Weekly Shonen JUMP 2023)', price: 'US $26', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20231208102838-0.webp?size=m' },
+            { id: 349476, number: 'OP05-119', name: 'Monkey.D.Luffy Wanted SEC-SPC [OP05-119] (Emperors In The New World)', price: 'US $211', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20240831070711-1.webp?size=m' },
+            { id: 676024, number: 'OP13-118', name: 'Monkey.D.Luffy SEC-P [OP13-118] (CARRYING ON HIS WILL)', price: 'US $61', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/OPC-TCG-2025-08-13-OP13-118-SEC-P.webp?size=m' },
+            { id: 752859, number: 'P-055', name: 'Monkey.D.Luffy P (Opened) [P-055] [EN] (US VOYAGE)', price: 'US $258', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/OPC-EN-TCG-2026-01-P-055-P.webp?size=m' },
+            { id: 676009, number: 'OP13-118', name: 'Monkey.D.Luffy Wanted SEC-SPC [OP13-118] (CARRYING ON HIS WILL)', price: 'US $95', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/OPC-TCG-2025-08-13-OP13-118-SEC-SPC.webp?size=m' },
+            { id: 108050, number: 'P-033', name: 'Monkey D Luffy [P-033] (Weekly Shonen JUMP 2023.1/7)', price: 'US $16', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20230124031016-0.webp?size=m' },
+            { id: 349447, number: 'OP09-061', name: 'Monkey.D.Luffy L-P [OP09-061] (Emperors In The New World)', price: 'US $21', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20240829083545-2.webp?size=m' },
+            { id: 770153, number: 'OP07-073', name: 'Monkey.D.Luffy R Attendee Gift [OP07-073] (CARD GAMES Fest 25-26)', price: 'US $25', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20260227080201-0.webp?size=m' },
+            { id: 135438, number: 'OP05-119', name: 'Monkey D Luffy SEC-P [OP05-119] (Awakening of the New Era)', price: 'US $113', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20230829095831-0.webp?size=m' },
+            { id: 764639, number: 'ST26-005', name: 'Monkey.D.Luffy SR-SPC [ST26-005] (Adventure on KAMI\'s Island)', price: 'US $145', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20260227061441-0.webp?size=m' },
+            { id: 159276, number: 'P-041', name: 'Monkey D Luffy P [P-041] (BANDAI CARD GAMES Fest23-24)', price: 'US $15', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20240414052902-0.webp?size=m' },
+            { id: 751308, number: 'EB04-061', name: 'Monkey.D.Luffy SEC-P [EB04-061] (EGGHEAD CRISIS)', price: 'US $37', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20260130070831-0.webp?size=m' },
+            { id: 520548, number: 'OP11-080', name: 'Gear 2 R-P [OP11-080] (A Fist of Divine Speed)', price: 'US $182', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20250301020330-11.webp?size=m' },
+            { id: 328398, number: 'OP01-024', name: 'Monkey.D.Luffy SR-P [OP01-024] (One Piece Card The Best)', price: 'US $12', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20240727023906-0.webp?size=m' },
+            { id: 605546, number: 'ST21-014', name: 'Monkey.D.Luffy SR [ST21-014] (Flagship Battle Winner)', price: 'US $534', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20250729094402-0.webp?size=m' },
+            { id: 112982, number: 'ST01-012', name: 'Monkey.D.Luffy Wanted SR-SPC [ST01-012] (Formidable Enemy)', price: 'US $83', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20230211013350-0.webp?size=m' },
+            { id: 135439, number: 'OP05-119', name: 'Monkey.D.Luffy SEC-SP Comic Parallel [OP05-119] (Awakening)', price: 'US $3,450', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20231215103620-0.webp?size=m' },
+            { id: 135437, number: 'OP05-119', name: 'Monkey D Luffy SEC [OP05-119] (Awakening of the New Era)', price: 'US $7', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20260126084309-0.webp?size=m' },
+            { id: 323700, number: 'P-041', name: 'Monkey.D.Luffy P [P-041] (ONE PIECE EMOTION)', price: 'US $32', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20240717090259-0.webp?size=m' },
+            { id: 556832, number: 'ST13-003', name: 'Monkey.D.Luffy L [ST13-003] [EN] (BVB x ONE PIECE)', price: 'US $565', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20250425074648-0.webp?size=m' },
         ]
     },
     {
-        section: '💎 第二梯隊 — 經典高保值',
+        section: '⚔️ Roronoa Zoro（5張）',
         cards: [
-            { number: 'OP01-120', name: 'Shanks SEC Parallel (Blue)', reason: 'OP-01 的紅髮傑克。它是海賊王 TCG 第一張最高等級卡片，歷史意義非凡。' },
-            { number: 'OP01-001', name: 'Zoro (Leader Alt-Art)', reason: '元祖索隆隊長。在玩家心中，OP-01 的異圖隊長永遠有不可撼動的收藏位階。' },
-            { number: 'OP03-040', name: 'Nami (Leader Alt-Art)', reason: '最具代表性的娜美隊長卡。女角卡在海賊王市場一直有「溢價體質」，保值力極強。' },
-            { number: 'OP01-121', name: 'Trafalgar Law SEC Parallel', reason: '羅在歐美與亞洲市場人氣極高。OP-01 的羅是早期競技與收藏的雙重巔峰。' },
-            { number: 'OP02-001', name: 'Whitebeard (Leader Alt-Art)', reason: '愛德華·紐蓋特（白鬍子）。海賊王中最受尊敬的角色，其隊長異圖卡面非常有威嚴。' },
-            { number: '1st Anniv.', name: 'Nami (Ukiyo-e) PSA 10', reason: '(特別推薦) 英語版 PSA 10 的單張娜美，極具國際流通性。' },
+            { id: 635880, number: 'ST21-015', name: 'Roronoa Zoro SR [ST21-015] (Flagship Battle Top 8)', price: 'US $79', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20250701071049-0.webp?size=m' },
+            { id: 104428, number: 'OP01-001', name: 'Roronoa Zoro L-P [OP01-001] (ROMANCE DAWN)', price: 'US $88', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20221121015111-0.webp?size=m' },
+            { id: 300064, number: 'OP06-118', name: 'Roronoa Zoro SEC [OP06-118] (2nd ANNIVERSARY SET)', price: 'US $35', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/OPC-TCG-OP06-118-SEC.webp?size=m' },
+            { id: 106779, number: 'OP01-025', name: 'Roronoa Zoro SR [OP01-025] (Flagship Battle Victory)', price: 'US $753', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20240217103920-0.webp?size=m' },
+            { id: 158397, number: 'OP06-118', name: 'Roronoa Zoro SEC [OP06-118] (Wings of Captain)', price: 'US $7', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20231123094139-3.webp?size=m' },
         ]
     },
     {
-        section: '🌟 第三梯隊 — 高潛力漫畫背 & 稀有卡',
+        section: '💃 Boa Hancock（3張）',
         cards: [
-            { number: 'OP04-119', name: 'Sabo (Manga Rare)', reason: '薩波是目前漫畫背中相對好入手的，但他與魯夫、艾斯的兄弟羈絆，保證了其長線增值空間。' },
-            { number: 'OP03-122', name: 'Sogeking (Manga Rare)', reason: '狙擊王的漫畫背。藝術風格與「騙人布」的經典時刻結合，是漫畫背中極具特色的一張。' },
-            { number: 'OP01-016', name: 'Nami (SP Card from OP05)', reason: '「新版娜美 SP」的畫風極受推崇，目前高分鑑定品的價格直逼漫畫背。' },
-            { number: 'OP05-119', name: 'Luffy (Gear 5) Manga Rare', reason: '如果能以接近 3 萬台幣找到品相稍差或裸卡，這絕對是無腦入。它是海賊王 TCG 的「圖騰」。' },
-            { number: 'Promo', name: 'P-001 Luffy (Winner Version)', reason: '早期官方比賽的 Winner 卡。產量固定且不再印製，是資深老藏家最愛炫耀的資產。' },
-            { number: 'OP01-002', name: 'Luffy (Leader Alt - Romance Dawn)', reason: '第一彈最經典的魯夫異圖隊長。隨著時間推移，OP-01 的箱抽難度會讓這張卡變成傳說。' },
+            { id: 728156, number: 'OP14-112', name: 'Boa Hancock SR-SPC Japanese Art [OP14-112] (THE AZURE SEA\'S SEVEN)', price: 'US $204', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20251121102824-0.webp?size=m' },
+            { id: 349478, number: 'OP07-051', name: 'Boa Hancock SR-SPC [OP07-051] (Emperors In The New World)', price: 'US $125', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20240831045932-0.webp?size=m' },
+            { id: 764614, number: 'OP12-014', name: 'Boa Hancock SR-SPC [OP12-014] (Adventure on KAMI\'s Island)', price: 'US $176', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/OPC-TCG-2026-0217-OP12-014.webp?size=m' },
         ]
-    }
+    },
+    {
+        section: '🍊 Nami（2張）',
+        cards: [
+            { id: 435341, number: 'ST01-007', name: 'Nami C [ST01-007] (The Best Storage Box Set)', price: 'US $38', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20241227100737-1.webp?size=m' },
+            { id: 135442, number: 'OP01-016', name: 'Nami R-SPC [OP01-016] (Awakening of the New Era)', price: 'US $98', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20231215104714-0.webp?size=m' },
+        ]
+    },
+    {
+        section: '🍭 Charlotte Pudding（2張）',
+        cards: [
+            { id: 265751, number: 'OP03-112', name: 'Charlotte Pudding R-SPC [OP03-112] (Two Legends)', price: 'US $51', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20240524085441-0.webp?size=m' },
+            { id: 265703, number: 'OP08-058', name: 'Charlotte Pudding L-P [OP08-058] (Two Legends)', price: 'US $19', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20240524072101-1.webp?size=m' },
+        ]
+    },
+    {
+        section: '🔥 Sabo（2張）',
+        cards: [
+            { id: 300062, number: 'OP04-083', name: 'Sabo SR [OP04-083] (2nd ANNIVERSARY SET)', price: 'US $25', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/ad89e782-e833-46d.webp?size=m' },
+            { id: 751311, number: 'PRB02-014', name: 'Sabo SR-SPC [PRB02-014] (EGGHEAD CRISIS)', price: 'US $95', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20260202091359-0.webp?size=m' },
+        ]
+    },
+    {
+        section: '⚡ 其他人氣角色（各1張）',
+        cards: [
+            { id: 349419, number: 'OP09-004', name: 'Shanks Wanted SR-SPC [OP09-004] (Emperors In The New World)', price: 'US $81', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20240830021604-0.webp?size=m' },
+            { id: 676025, number: 'OP13-119', name: 'Portgas.D.Ace SEC-P [OP13-119] (CARRYING ON HIS WILL)', price: 'US $21', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20250822052033-21.webp?size=m' },
+            { id: 442287, number: 'OP10-119', name: 'Trafalgar Law SEC-SP Comic Parallel [OP10-119] (Royal Blood)', price: 'US $414', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20241130015838-4.webp?size=m' },
+            { id: 102651, number: 'ST01-006', name: 'Tony Tony Chopper C Parallel [ST01-006] (Flagship Battle Best 8)', price: 'US $189', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20221107034213-5.webp?size=m' },
+            { id: 751309, number: 'OP11-106', name: 'Zeus R-SPC [OP11-106] (EGGHEAD CRISIS)', price: 'US $157', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20260130065226-0.webp?size=m' },
+            { id: 751290, number: 'EB04-001', name: 'Jewelry Bonney L-P [EB04-001] (EGGHEAD CRISIS)', price: 'US $107', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20260202091256-0.webp?size=m' },
+            { id: 764635, number: 'OP15-118', name: 'Enel SEC-SP Comic Parallel [OP15-118] (Adventure on KAMI\'s Island)', price: 'US $941', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/OPC-TCG-2026-0217-OP15-118.webp?size=m' },
+            { id: 158341, number: 'OP06-042', name: 'Vinsmoke Reiju L-P [OP06-042] (Wings of Captain)', price: 'US $51', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20231124035242-0.webp?size=m' },
+            { id: 265745, number: 'OP08-118', name: 'Silvers Rayleigh SEC-SP Comic Parallel [OP08-118] (Two Legends)', price: 'US $283', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20240524072101-0.webp?size=m' },
+            { id: 656320, number: 'OP09-057', name: 'Cross Guild R-P [OP09-057] (One Piece Card The Best vol.2)', price: 'US $44', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20250728015949-0.webp?size=m' },
+            { id: 710429, number: 'EB03-024', name: 'Nefeltari Vivi SR-SPC [EB03-024] (Heroines edition)', price: 'US $283', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/OPC-TCG-10-10-EB03-024.webp?size=m' },
+            { id: 710435, number: 'EB03-045', name: 'Perona SR-SPC [EB03-045] (Heroines edition)', price: 'US $110', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/OPC-TCG-10-10-EB03-045.webp?size=m' },
+            { id: 728157, number: 'OP14-118', name: 'I\'m scared... R-P [OP14-118] (THE AZURE SEA\'S SEVEN)', price: 'US $104', thumb: 'https://cdn.snkrdunk.com/upload_bg_removed/20251121102825-7.webp?size=m' },
+        ]
+    },
 ];
 
 let wishlistLoaded = false;
-let wishlistImageCache = {};
 
-async function renderWishlistPage() {
+function renderWishlistPage() {
     const grid = document.getElementById('wlGrid');
-    const loader = document.getElementById('wlLoader');
-
     if (wishlistLoaded) return;
 
     grid.innerHTML = '';
-    loader.style.display = 'flex';
 
-    // First render cards without images
     for (const section of WISHLIST_DATA) {
         const sectionTitle = document.createElement('div');
         sectionTitle.className = 'wl-section-title';
@@ -4409,16 +4453,13 @@ async function renderWishlistPage() {
         for (const card of section.cards) {
             const cardEl = document.createElement('div');
             cardEl.className = 'wl-card';
-            cardEl.dataset.number = card.number;
-            cardEl.dataset.name = card.name;
+            cardEl.onclick = () => window.open('https://snkrdunk.com/en/trading-cards/' + card.id, '_blank');
             cardEl.innerHTML = `
-                <div class="wl-card-img" style="height:280px;display:flex;align-items:center;justify-content:center;background:var(--bg-warm);color:var(--muted);font-size:.8rem;">
-                    搜尋圖片中...
-                </div>
+                <img class="wl-card-img" src="${card.thumb}" alt="${card.name}" onerror="this.outerHTML='<div class=\\'wl-card-img\\' style=\\'height:280px;display:flex;align-items:center;justify-content:center;background:var(--bg-warm);color:var(--muted)\\'>🃏</div>'" onclick="event.stopPropagation();openLightbox('${card.thumb}')" />
                 <div class="wl-card-body">
                     <div class="wl-card-number">${card.number}</div>
                     <div class="wl-card-name">${card.name}</div>
-                    <div class="wl-card-reason">${card.reason}</div>
+                    <div class="wl-card-price">${card.price}</div>
                 </div>
             `;
             sectionGrid.appendChild(cardEl);
@@ -4426,67 +4467,7 @@ async function renderWishlistPage() {
         grid.appendChild(sectionGrid);
     }
 
-    loader.style.display = 'none';
-    wishlistLoaded = true;
-
-    // Now load images in background
-    loadWishlistImages();
-}
-
-async function loadWishlistImages() {
-    const allCards = WISHLIST_DATA.flatMap(s => s.cards);
-    // Deduplicate by name for searching
-    const uniqueNames = [...new Set(allCards.map(c => c.name.split('(')[0].trim().replace(/"/g, '')))];
-
-    for (const searchName of uniqueNames) {
-        try {
-            const resp = await fetch('/api/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ keyword: searchName, page: 1, per_page: 5, sort: 'featured' })
-            });
-            const data = await resp.json();
-            if (data.tradingCards && data.tradingCards.length > 0) {
-                for (const tc of data.tradingCards) {
-                    if (tc.thumbnailUrl && tc.productNumber) {
-                        wishlistImageCache[tc.productNumber] = { url: tc.thumbnailUrl, id: tc.id };
-                    }
-                    // Also cache by partial name match
-                    if (tc.thumbnailUrl) {
-                        wishlistImageCache[tc.name] = { url: tc.thumbnailUrl, id: tc.id };
-                    }
-                }
-            }
-        } catch (e) {
-            console.warn('Wishlist image search failed for:', searchName, e);
-        }
-    }
-
-    // Apply images to cards
-    document.querySelectorAll('.wl-card').forEach(cardEl => {
-        const number = cardEl.dataset.number;
-        const name = cardEl.dataset.name;
-        const imgDiv = cardEl.querySelector('.wl-card-img');
-        const cached = wishlistImageCache[number];
-
-        if (cached) {
-            imgDiv.outerHTML = `<img class="wl-card-img" src="${cached.url}" alt="${name}" onerror="this.style.display='none'" />`;
-            cardEl.onclick = () => window.open('https://snkrdunk.com/en/trading-cards/' + cached.id, '_blank');
-        } else {
-            // Try matching by name
-            const nameMatch = Object.keys(wishlistImageCache).find(k =>
-                name.toLowerCase().includes(k.toLowerCase().split('(')[0].trim()) ||
-                k.toLowerCase().includes(name.toLowerCase().split('(')[0].trim())
-            );
-            if (nameMatch && wishlistImageCache[nameMatch]) {
-                const m = wishlistImageCache[nameMatch];
-                imgDiv.outerHTML = `<img class="wl-card-img" src="${m.url}" alt="${name}" onerror="this.style.display='none'" />`;
-                cardEl.onclick = () => window.open('https://snkrdunk.com/en/trading-cards/' + m.id, '_blank');
-            } else {
-                imgDiv.innerHTML = '🃏 暫無圖片';
-            }
-        }
-    });
+    wishlistLoaded = false;
 }
 </script>
 </body>
