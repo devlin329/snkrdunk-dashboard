@@ -333,10 +333,23 @@
         .btn-tg:hover { background: var(--sage-light); }
 
         .loader { display: none; justify-content: center; align-items: center; padding: 40px; gap: 12px; }
+
+        /* Lightbox */
+        .lightbox-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,.85); z-index: 10000; justify-content: center; align-items: center; cursor: zoom-out;
+        }
+        .lightbox-overlay.active { display: flex; }
+        .lightbox-overlay img {
+            max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 12px;
+            box-shadow: 0 8px 40px rgba(0,0,0,.5); animation: lightboxIn .2s ease;
+        }
+        @keyframes lightboxIn { from { transform: scale(.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .spinner { width: 28px; height: 28px; border: 3px solid rgba(192,120,76,.15); border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; }
 
         .hero { display: flex; gap: 14px; align-items: center; background: var(--card); border-radius: 12px; padding: 14px; border: 1px solid var(--border); margin-bottom: 12px; box-shadow: 0 1px 8px var(--shadow); }
-        .hero img { width: 80px; height: 110px; object-fit: cover; border-radius: 8px; background: var(--bg-warm); }
+        .hero img { width: 130px; height: 180px; object-fit: cover; border-radius: 8px; background: var(--bg-warm); cursor: pointer; transition: transform .2s; }
+        .hero img:hover { transform: scale(1.05); }
         .hero .info h2 { font-size: .95rem; line-height: 1.3; margin-bottom: 3px; font-weight: 600; }
         .hero .info p { color: var(--text-sec); font-size: .78rem; margin-bottom: 1px; }
         .hero .badge { display: inline-block; background: rgba(192,120,76,.08); color: var(--primary); padding: 2px 8px; border-radius: 10px; font-size: .68rem; font-weight: 600; margin-top: 3px; }
@@ -1839,6 +1852,11 @@
         </div>
     </div>
 
+<!-- Lightbox -->
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="Card Preview" />
+</div>
+
 <script>
 let rawData = null, allHistories = [], conditions = [];
 let activeCondition = 'All', activeDays = 90, currentUrl = '';
@@ -1851,6 +1869,17 @@ let currentCategory = 25; // 當前類別
 let currentSort = 'featured'; // 當前排序：featured, price_asc, price_desc
 let searchSort = 'featured'; // 特別搜尋的排序
 let lastSearchKeyword = ''; // 上次搜尋的關鍵字
+
+// ======= LIGHTBOX =======
+function openLightbox(imgSrc) {
+    const lb = document.getElementById('lightbox');
+    document.getElementById('lightboxImg').src = imgSrc;
+    lb.classList.add('active');
+}
+function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('active');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
 // ======= PORTFOLIO PRICE CACHE =======
 let portfolioPriceCache = {}; // { "cardId_condition": { price: 123, timestamp: xxx } }
@@ -3385,8 +3414,11 @@ function render() {
     if (heroPn) heroPn.innerText = info.product_number ? `#${info.product_number}` : '';
     if (heroRelease) heroRelease.innerText = info.released_at ? `Released: ${info.released_at.split('T')[0]}` : '';
     if (heroImg) {
-        if (info.thumbnail_url) { heroImg.src = info.thumbnail_url; heroImg.style.display = 'block'; }
-        else { heroImg.style.display = 'none'; }
+        if (info.thumbnail_url) {
+            heroImg.src = info.thumbnail_url;
+            heroImg.style.display = 'block';
+            heroImg.onclick = () => openLightbox(info.thumbnail_url);
+        } else { heroImg.style.display = 'none'; }
     }
 
     const grid = document.getElementById('condGrid');
