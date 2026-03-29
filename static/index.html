@@ -923,6 +923,75 @@
             line-height: 1.5;
         }
 
+        /* ======= WISHLIST (思考收藏) ======= */
+        .wl-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+        .wl-card {
+            background: var(--card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: transform .2s, box-shadow .2s;
+            cursor: pointer;
+        }
+        .wl-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,.12);
+        }
+        .wl-card-img {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            background: var(--bg-warm);
+        }
+        .wl-card-body {
+            padding: 14px 16px 16px;
+        }
+        .wl-card-number {
+            font-size: .72rem;
+            color: var(--muted);
+            font-weight: 600;
+            letter-spacing: .5px;
+        }
+        .wl-card-name {
+            font-size: .92rem;
+            font-weight: 700;
+            color: var(--text);
+            margin: 4px 0 8px;
+            line-height: 1.3;
+        }
+        .wl-card-reason {
+            font-size: .78rem;
+            color: var(--muted);
+            line-height: 1.5;
+            border-top: 1px solid var(--border);
+            padding-top: 8px;
+        }
+        .wl-card-price {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: .76rem;
+            font-weight: 600;
+            color: var(--rust);
+            background: rgba(185,107,72,.1);
+            padding: 3px 10px;
+            border-radius: 8px;
+        }
+        .wl-section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin: 24px 0 12px;
+            padding: 8px 14px;
+            background: linear-gradient(90deg, rgba(185,107,72,.12), transparent);
+            border-left: 3px solid var(--rust);
+            border-radius: 0 8px 8px 0;
+        }
+        .wl-section-title:first-child { margin-top: 0; }
+
         .pv-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -1371,6 +1440,7 @@
             <button class="nav-tab" onclick="switchView('browse')">🗂️ 瀏覽系列</button>
             <button class="nav-tab" onclick="switchView('search')">🔍 特別搜尋</button>
             <button class="nav-tab" onclick="switchView('portfolio')">💼 投資組合</button>
+            <button class="nav-tab" onclick="switchView('wishlist')">🎯 思考收藏</button>
         </div>
 
         <div class="container">
@@ -1616,6 +1686,19 @@
             </div>
         </div>
 
+        <!-- Wishlist / 思考收藏 View -->
+        <div class="browse-view" id="wishlistView">
+            <div class="pv-header">
+                <h2>🎯 思考收藏清單</h2>
+                <p style="color:var(--muted);font-size:.78rem;margin:4px 0 10px;line-height:1.4;">精選高 CP 值海賊王卡牌，五週年前的佈局參考。點擊卡片可前往 Snkrdunk 查看詳情。</p>
+            </div>
+            <div class="wl-loader" id="wlLoader" style="display:none;">
+                <div class="spinner"></div>
+                <p>正在搜尋卡牌圖片...</p>
+            </div>
+            <div class="wl-grid" id="wlGrid"></div>
+        </div>
+
     </div>
     </div><!-- End page-container -->
 
@@ -1777,7 +1860,7 @@ function switchView(view) {
     currentView = view;
 
     // 切換 Tab 樣式
-    const tabMap = { analyze: '分析', browse: '瀏覽', search: '搜尋', portfolio: '投資' };
+    const tabMap = { analyze: '分析', browse: '瀏覽', search: '搜尋', portfolio: '投資', wishlist: '思考' };
     document.querySelectorAll('.nav-tab').forEach(tab => {
         tab.classList.toggle('active', tab.textContent.includes(tabMap[view] || ''));
     });
@@ -1787,11 +1870,13 @@ function switchView(view) {
     const browseView = document.getElementById('browseView');
     const searchView = document.getElementById('searchView');
     const portfolioView = document.getElementById('portfolioView');
+    const wishlistView = document.getElementById('wishlistView');
 
     container.style.display = 'none';
     browseView.classList.remove('active');
     searchView.classList.remove('active');
     portfolioView.classList.remove('active');
+    wishlistView.classList.remove('active');
 
     if (view === 'analyze') {
         container.style.display = 'block';
@@ -1810,6 +1895,9 @@ function switchView(view) {
     } else if (view === 'portfolio') {
         portfolioView.classList.add('active');
         renderPortfolioPage();
+    } else if (view === 'wishlist') {
+        wishlistView.classList.add('active');
+        renderWishlistPage();
     }
 }
 
@@ -4223,6 +4311,149 @@ function generateShareQRCode() {
         colorDark: '#3d3229',
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.M
+    });
+}
+
+// ======= WISHLIST (思考收藏) =======
+const WISHLIST_DATA = [
+    {
+        section: '🔥 第一梯隊 — 五週年核心標的',
+        cards: [
+            { number: 'OP05-119', name: 'Luffy (Gear 5) SEC Parallel', reason: '五檔魯夫的指標卡，雖然量大但需求永遠在。五週年時，初代五檔卡會有情懷加成。' },
+            { number: 'OP01-016', name: 'Nami (Parallel Rare)', reason: 'OP-01 的元祖娜美，是所有娜美卡收藏者的起點。隨第一彈絕版，這張卡是硬通貨。' },
+            { number: 'OP02-121', name: 'Kuzan SEC Parallel', reason: '青雉的這張卡藝術風格極佳，且作為海軍大將的核心卡，收藏價值與競技歷史並存。' },
+            { number: 'OP06-086', name: 'Gecko Moria (Leader Alt)', reason: '莫利亞的隊長異圖畫風極具張力，是許多暗黑系藏家的首選。' },
+            { number: 'ST01-001', name: 'Luffy (25th Anniversary Alt)', reason: '25 週年紀念版的紅色魯夫隊長。帶有「週年標誌」的卡，在五週年時最容易被想起。' },
+            { number: 'OP05-060', name: 'Eustass "Captain" Kid SEC Parallel', reason: '磁氣魔人狀態，畫風非常霸氣，目前價格被低估，適合長線埋伏。' },
+        ]
+    },
+    {
+        section: '💎 第二梯隊 — 經典高保值',
+        cards: [
+            { number: 'OP01-120', name: 'Shanks SEC Parallel (Blue)', reason: 'OP-01 的紅髮傑克。它是海賊王 TCG 第一張最高等級卡片，歷史意義非凡。' },
+            { number: 'OP01-001', name: 'Zoro (Leader Alt-Art)', reason: '元祖索隆隊長。在玩家心中，OP-01 的異圖隊長永遠有不可撼動的收藏位階。' },
+            { number: 'OP03-040', name: 'Nami (Leader Alt-Art)', reason: '最具代表性的娜美隊長卡。女角卡在海賊王市場一直有「溢價體質」，保值力極強。' },
+            { number: 'OP01-121', name: 'Trafalgar Law SEC Parallel', reason: '羅在歐美與亞洲市場人氣極高。OP-01 的羅是早期競技與收藏的雙重巔峰。' },
+            { number: 'OP02-001', name: 'Whitebeard (Leader Alt-Art)', reason: '愛德華·紐蓋特（白鬍子）。海賊王中最受尊敬的角色，其隊長異圖卡面非常有威嚴。' },
+            { number: '1st Anniv.', name: 'Nami (Ukiyo-e) PSA 10', reason: '(特別推薦) 英語版 PSA 10 的單張娜美，極具國際流通性。' },
+        ]
+    },
+    {
+        section: '🌟 第三梯隊 — 高潛力漫畫背 & 稀有卡',
+        cards: [
+            { number: 'OP04-119', name: 'Sabo (Manga Rare)', reason: '薩波是目前漫畫背中相對好入手的，但他與魯夫、艾斯的兄弟羈絆，保證了其長線增值空間。' },
+            { number: 'OP03-122', name: 'Sogeking (Manga Rare)', reason: '狙擊王的漫畫背。藝術風格與「騙人布」的經典時刻結合，是漫畫背中極具特色的一張。' },
+            { number: 'OP01-016', name: 'Nami (SP Card from OP05)', reason: '「新版娜美 SP」的畫風極受推崇，目前高分鑑定品的價格直逼漫畫背。' },
+            { number: 'OP05-119', name: 'Luffy (Gear 5) Manga Rare', reason: '如果能以接近 3 萬台幣找到品相稍差或裸卡，這絕對是無腦入。它是海賊王 TCG 的「圖騰」。' },
+            { number: 'Promo', name: 'P-001 Luffy (Winner Version)', reason: '早期官方比賽的 Winner 卡。產量固定且不再印製，是資深老藏家最愛炫耀的資產。' },
+            { number: 'OP01-002', name: 'Luffy (Leader Alt - Romance Dawn)', reason: '第一彈最經典的魯夫異圖隊長。隨著時間推移，OP-01 的箱抽難度會讓這張卡變成傳說。' },
+        ]
+    }
+];
+
+let wishlistLoaded = false;
+let wishlistImageCache = {};
+
+async function renderWishlistPage() {
+    const grid = document.getElementById('wlGrid');
+    const loader = document.getElementById('wlLoader');
+
+    if (wishlistLoaded) return;
+
+    grid.innerHTML = '';
+    loader.style.display = 'flex';
+
+    // First render cards without images
+    for (const section of WISHLIST_DATA) {
+        const sectionTitle = document.createElement('div');
+        sectionTitle.className = 'wl-section-title';
+        sectionTitle.textContent = section.section;
+        grid.appendChild(sectionTitle);
+
+        const sectionGrid = document.createElement('div');
+        sectionGrid.className = 'wl-grid';
+        sectionGrid.style.marginBottom = '16px';
+
+        for (const card of section.cards) {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'wl-card';
+            cardEl.dataset.number = card.number;
+            cardEl.dataset.name = card.name;
+            cardEl.innerHTML = `
+                <div class="wl-card-img" style="height:280px;display:flex;align-items:center;justify-content:center;background:var(--bg-warm);color:var(--muted);font-size:.8rem;">
+                    搜尋圖片中...
+                </div>
+                <div class="wl-card-body">
+                    <div class="wl-card-number">${card.number}</div>
+                    <div class="wl-card-name">${card.name}</div>
+                    <div class="wl-card-reason">${card.reason}</div>
+                </div>
+            `;
+            sectionGrid.appendChild(cardEl);
+        }
+        grid.appendChild(sectionGrid);
+    }
+
+    loader.style.display = 'none';
+    wishlistLoaded = true;
+
+    // Now load images in background
+    loadWishlistImages();
+}
+
+async function loadWishlistImages() {
+    const allCards = WISHLIST_DATA.flatMap(s => s.cards);
+    // Deduplicate by name for searching
+    const uniqueNames = [...new Set(allCards.map(c => c.name.split('(')[0].trim().replace(/"/g, '')))];
+
+    for (const searchName of uniqueNames) {
+        try {
+            const resp = await fetch('/api/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ keyword: searchName, page: 1, per_page: 5, sort: 'featured' })
+            });
+            const data = await resp.json();
+            if (data.tradingCards && data.tradingCards.length > 0) {
+                for (const tc of data.tradingCards) {
+                    if (tc.thumbnailUrl && tc.productNumber) {
+                        wishlistImageCache[tc.productNumber] = { url: tc.thumbnailUrl, id: tc.id };
+                    }
+                    // Also cache by partial name match
+                    if (tc.thumbnailUrl) {
+                        wishlistImageCache[tc.name] = { url: tc.thumbnailUrl, id: tc.id };
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Wishlist image search failed for:', searchName, e);
+        }
+    }
+
+    // Apply images to cards
+    document.querySelectorAll('.wl-card').forEach(cardEl => {
+        const number = cardEl.dataset.number;
+        const name = cardEl.dataset.name;
+        const imgDiv = cardEl.querySelector('.wl-card-img');
+        const cached = wishlistImageCache[number];
+
+        if (cached) {
+            imgDiv.outerHTML = `<img class="wl-card-img" src="${cached.url}" alt="${name}" onerror="this.style.display='none'" />`;
+            cardEl.onclick = () => window.open('https://snkrdunk.com/en/trading-cards/' + cached.id, '_blank');
+        } else {
+            // Try matching by name
+            const nameMatch = Object.keys(wishlistImageCache).find(k =>
+                name.toLowerCase().includes(k.toLowerCase().split('(')[0].trim()) ||
+                k.toLowerCase().includes(name.toLowerCase().split('(')[0].trim())
+            );
+            if (nameMatch && wishlistImageCache[nameMatch]) {
+                const m = wishlistImageCache[nameMatch];
+                imgDiv.outerHTML = `<img class="wl-card-img" src="${m.url}" alt="${name}" onerror="this.style.display='none'" />`;
+                cardEl.onclick = () => window.open('https://snkrdunk.com/en/trading-cards/' + m.id, '_blank');
+            } else {
+                imgDiv.innerHTML = '🃏 暫無圖片';
+            }
+        }
     });
 }
 </script>
